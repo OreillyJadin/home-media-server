@@ -35,15 +35,25 @@ systemctl enable --now docker
 
 SCRIPT_DIR=""
 SCRIPT_PATH="${BASH_SOURCE[0]:-}"
+is_install_checkout() {
+  local directory="$1"
+  [[ -f "${directory}/docker-compose.yml" &&
+    -f "${directory}/config-templates/frigate.yml" &&
+    -f "${directory}/mediactl" ]]
+}
+
 if [[ -f "${SCRIPT_PATH}" ]]; then
   SCRIPT_DIR="$(cd -- "$(dirname -- "${SCRIPT_PATH}")" && pwd)"
 fi
-if [[ -f "$(pwd)/docker-compose.yml" ]]; then
+if [[ -n "${SCRIPT_DIR}" ]] && ! is_install_checkout "${SCRIPT_DIR}"; then
+  SCRIPT_DIR=""
+fi
+if is_install_checkout "$(pwd)"; then
   SCRIPT_DIR="$(pwd)"
 fi
 
 INSTALL_DIR="${INSTALL_DIR:-/opt/home-media-server}"
-if [[ -n "${SCRIPT_DIR}" && -f "${SCRIPT_DIR}/docker-compose.yml" ]]; then
+if [[ -n "${SCRIPT_DIR}" ]]; then
   INSTALL_DIR="${SCRIPT_DIR}"
 else
   if [[ -d "${INSTALL_DIR}/.git" ]]; then
@@ -74,9 +84,14 @@ fi
 prompt_value() {
   local prompt="$1"
   local default="$2"
+  local include_default="${3:-1}"
   local answer=""
+  local suffix=" [${default}]"
+  if [[ "${include_default}" == 0 ]]; then
+    suffix=""
+  fi
   if [[ -r /dev/tty ]]; then
-    if printf '%s [%s]: ' "${prompt}" "${default}" >/dev/tty 2>/dev/null &&
+    if printf '%s%s: ' "${prompt}" "${suffix}" >/dev/tty 2>/dev/null &&
       IFS= read -r answer </dev/tty 2>/dev/null; then
       :
     fi
@@ -84,33 +99,51 @@ prompt_value() {
   printf '%s' "${answer:-${default}}"
 }
 
-if [[ "${NONINTERACTIVE:-0}" != 1 ]]; then
-  if [[ -z "${TZ+x}" ]]; then
-    TZ="$(prompt_value 'Timezone' "${DEFAULT_TZ}")"
+read_env_setting() {
+  local name="$1"
+  sed -n "s/^${name}=//p" .env | head -n 1
+}
+
+if [[ -f .env ]]; then
+  printf 'Keeping existing .env settings.\n'
+  TZ="$(read_env_setting TZ)"
+  MEDIA_DIR="$(read_env_setting MEDIA_DIR)"
+  RECORDINGS_DIR="$(read_env_setting RECORDINGS_DIR)"
+  PUID="$(read_env_setting PUID)"
+  PGID="$(read_env_setting PGID)"
+  RENDER_GID="$(read_env_setting RENDER_GID)"
+  COMPOSE_FILE="$(read_env_setting COMPOSE_FILE)"
+  FRIGATE_RTSP_PASSWORD="$(read_env_setting FRIGATE_RTSP_PASSWORD)"
+  FRIGATE_SHM="$(read_env_setting FRIGATE_SHM)"
+else
+  if [[ "${NONINTERACTIVE:-0}" != 1 ]]; then
+    if [[ -z "${TZ+x}" ]]; then
+      TZ="$(prompt_value 'Timezone' "${DEFAULT_TZ}")"
+    fi
+    if [[ -z "${MEDIA_DIR+x}" ]]; then
+      MEDIA_DIR="$(prompt_value 'Media directory' '/srv/media')"
+    fi
+    if [[ -z "${RECORDINGS_DIR+x}" ]]; then
+      RECORDINGS_DIR="$(prompt_value 'Recordings directory' '/srv/recordings')"
+    fi
   fi
-  if [[ -z "${MEDIA_DIR+x}" ]]; then
-    MEDIA_DIR="$(prompt_value 'Media directory' '/srv/media')"
-  fi
-  if [[ -z "${RECORDINGS_DIR+x}" ]]; then
-    RECORDINGS_DIR="$(prompt_value 'Recordings directory' '/srv/recordings')"
-  fi
+
+  TZ="${TZ:-${DEFAULT_TZ}}"
+  MEDIA_DIR="${MEDIA_DIR:-/srv/media}"
+  RECORDINGS_DIR="${RECORDINGS_DIR:-/srv/recordings}"
+  PUID="${PUID:-${DEFAULT_PUID}}"
+  PGID="${PGID:-${DEFAULT_PGID}}"
+  FRIGATE_RTSP_PASSWORD="${FRIGATE_RTSP_PASSWORD:-changeme}"
+  FRIGATE_SHM="${FRIGATE_SHM:-512mb}"
 fi
 
-TZ="${TZ:-${DEFAULT_TZ}}"
-MEDIA_DIR="${MEDIA_DIR:-/srv/media}"
-RECORDINGS_DIR="${RECORDINGS_DIR:-/srv/recordings}"
-PUID="${PUID:-${DEFAULT_PUID}}"
-PGID="${PGID:-${DEFAULT_PGID}}"
-FRIGATE_RTSP_PASSWORD="${FRIGATE_RTSP_PASSWORD:-changeme}"
-FRIGATE_SHM="${FRIGATE_SHM:-512mb}"
-
 if [[ -e /dev/dri/renderD128 ]]; then
-  RENDER_GID="$(stat -c '%g' /dev/dri/renderD128)"
-  COMPOSE_FILE=docker-compose.yml:docker-compose.gpu.yml
+  RENDER_GID="${RENDER_GID:-$(stat -c '%g' /dev/dri/renderD128)}"
+  COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.yml:docker-compose.gpu.yml}"
   OPENVINO_DEVICE=GPU
 else
   RENDER_GID="${RENDER_GID:-44}"
-  COMPOSE_FILE=docker-compose.yml
+  COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.yml}"
   OPENVINO_DEVICE=CPU
   printf 'Warning: /dev/dri/renderD128 was not found. Hardware video transcoding is off; Frigate detection will use the CPU.\n'
 fi
@@ -129,8 +162,6 @@ if [[ ! -f .env ]]; then
     printf 'FRIGATE_SHM=%s\n' "${FRIGATE_SHM}"
   } >.env
   chmod 600 .env
-else
-  printf 'Keeping existing .env settings.\n'
 fi
 chown "${PUID}:${PGID}" .env
 chmod 600 .env
@@ -145,11 +176,15 @@ mkdir -p \
   config/jellyfin \
   config/frigate \
   cache/jellyfin
-chown -R "${PUID}:${PGID}" \
+chown "${PUID}:${PGID}" \
   "${MEDIA_DIR}" \
-  "${RECORDINGS_DIR}" \
-  config \
-  cache
+  "${MEDIA_DIR}/movies" \
+  "${MEDIA_DIR}/tv" \
+  "${MEDIA_DIR}/music" \
+  "${MEDIA_DIR}/photos" \
+  "${MEDIA_DIR}/home-videos" \
+  "${RECORDINGS_DIR}"
+chown -R "${PUID}:${PGID}" config cache
 
 if [[ ! -f config/frigate/config.yml ]]; then
   sed "s/__OPENVINO_DEVICE__/${OPENVINO_DEVICE}/g" config-templates/frigate.yml >config/frigate/config.yml
@@ -187,11 +222,13 @@ chmod +x install.sh mediactl
 
 INSTALL_TAILSCALE="${INSTALL_TAILSCALE:-}"
 if [[ "${NONINTERACTIVE:-0}" != 1 && -z "${INSTALL_TAILSCALE}" ]]; then
-  INSTALL_TAILSCALE="$(prompt_value 'Install Tailscale for remote access? [y/N]' 'N')"
+  INSTALL_TAILSCALE="$(prompt_value 'Install Tailscale for remote access? (y/N)' 'N' 0)"
 fi
-if [[ "${INSTALL_TAILSCALE,,}" == y || "${INSTALL_TAILSCALE}" == 1 ]]; then
+case "${INSTALL_TAILSCALE,,}" in
+  y|yes|1)
   curl -fsSL https://tailscale.com/install.sh | sh
   tailscale up
-fi
+    ;;
+esac
 
-printf 'Done. Use "mediactl status" to check the services.\n'
+printf 'Manage the stack with: sudo mediactl status\n'

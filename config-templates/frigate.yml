@@ -68,9 +68,10 @@ cameras:
           input_args: preset-rtsp-restream
           roles:
             - detect
+    # Match your camera's sub stream resolution. Reolink 5MP sub streams are 640x360; Dahua/Amcrest sub streams can be set to 1280x720 in the camera's web UI.
     detect:
-      width: 1280
-      height: 720
+      width: 640
+      height: 360
       fps: 5
     objects:
       track:

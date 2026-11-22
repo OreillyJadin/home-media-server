@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if [[ "${EUID}" -ne 0 ]]; then
+  exec sudo -- "$(readlink -f -- "${BASH_SOURCE[0]}")" "$@"
+fi
+
 APP_DIR="$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)"
 cd "${APP_DIR}"
 
