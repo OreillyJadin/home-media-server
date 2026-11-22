@@ -305,6 +305,30 @@ unset COMPOSE_PROFILES IMMICH_UPLOAD_DIR IMMICH_DB_PASSWORD
 docker compose pull
 docker compose up -d
 
+CALIBRE_ADMIN_PASSWORD="$(read_env_setting CALIBRE_ADMIN_PASSWORD)"
+if [[ ",${ACTIVE_PROFILES//[[:space:]]/}," == *",books,"* ]] &&
+  ! grep -q '^CALIBRE_ADMIN_PASSWORD=' .env; then
+  CALIBRE_ADMIN_PASSWORD="$(openssl rand -hex 12)"
+  CALIBRE_ADMIN_PASSWORD+="1aA!"
+  printf 'Waiting for Calibre-Web to create its database'
+  for _ in $(seq 1 18); do
+    if [[ -f config/calibre-web/app.db ]]; then
+      break
+    fi
+    printf '.'
+    sleep 5
+  done
+  printf '\n'
+  if [[ -f config/calibre-web/app.db ]] &&
+    docker exec --user abc calibre-web /lsiopy/bin/python3 /app/calibre-web/cps.py \
+      -p /config/app.db -o /config/calibre-web.log -s "admin:${CALIBRE_ADMIN_PASSWORD}"; then
+    append_env_setting CALIBRE_ADMIN_PASSWORD "${CALIBRE_ADMIN_PASSWORD}"
+  else
+    CALIBRE_ADMIN_PASSWORD=""
+    printf 'WARNING: Calibre-Web automatic password setup failed. Change the default admin/admin123 password now.\n' >&2
+  fi
+fi
+
 printf 'Waiting for Frigate to create its admin password'
 PASSWORD_LINE=""
 for _ in $(seq 1 24); do
@@ -330,7 +354,11 @@ if [[ ",${ACTIVE_PROFILES//[[:space:]]/}," == *",photos,"* ]]; then
 fi
 if [[ ",${ACTIVE_PROFILES//[[:space:]]/}," == *",books,"* ]]; then
   printf 'Audiobookshelf: http://%s:13378\n' "${LAN_IP}"
-  printf 'Calibre-Web: http://%s:8083 (default login admin/admin123; change it)\n' "${LAN_IP}"
+  if [[ -n "${CALIBRE_ADMIN_PASSWORD}" ]]; then
+    printf 'Calibre-Web: http://%s:8083 (login admin / %s)\n' "${LAN_IP}" "${CALIBRE_ADMIN_PASSWORD}"
+  else
+    printf 'Calibre-Web: http://%s:8083 (change the default admin/admin123 password immediately)\n' "${LAN_IP}"
+  fi
 fi
 
 ln -sfn "${INSTALL_DIR}/mediactl" /usr/local/bin/mediactl

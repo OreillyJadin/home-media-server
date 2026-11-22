@@ -87,6 +87,10 @@ case "${1:-}" in
     else
       printf 'No first-boot password is present in the logs. Check "mediactl logs frigate"; reset the admin password using Frigate documentation if needed.\n'
     fi
+    CALIBRE_ADMIN_PASSWORD="$(read_env_setting CALIBRE_ADMIN_PASSWORD)"
+    if [[ -n "${CALIBRE_ADMIN_PASSWORD}" ]]; then
+      printf 'Calibre-Web admin password: %s\n' "${CALIBRE_ADMIN_PASSWORD}"
+    fi
     ;;
   uninstall)
     shift

@@ -82,7 +82,7 @@ The Intel graphics device (`/dev/dri`) is optional. The installer enables the GP
 
 4. Open Immich at `http://SERVER-IP:2283` and create the administrator account on first visit.
 5. Open Audiobookshelf at `http://SERVER-IP:13378` to create its initial account.
-6. Open Calibre-Web at `http://SERVER-IP:8083` and sign in with `admin` / `admin123`; change the password immediately.
+6. Open Calibre-Web at `http://SERVER-IP:8083` and sign in as `admin` with the password printed by the installer or shown by `mediactl password`. You can change it in your profile.
 
 ## Dashboard
 
@@ -102,7 +102,7 @@ Organize audiobooks as `Author/Book Title/files` under `/srv/media/audiobooks` (
 
 ## E-books and Kindle (Calibre-Web)
 
-Calibre-Web starts with the default login `admin` / `admin123`. Change it as soon as you sign in.
+Sign in as `admin` with the password printed by the installer or shown by `mediactl password`. You can change it in your profile.
 
 1. In Calibre-Web, open **Admin → Basic Configuration** and set the Calibre Library path to `/books`, then save. The installer creates a blank Calibre library there.
 2. In **Admin → Basic Configuration**, enable uploads if you want to add books through the browser.
@@ -173,7 +173,7 @@ mediactl restart [service]  Restart a service (for example: immich-server)
 mediactl update             Pull updates and restart enabled services
 mediactl stop               Stop enabled services
 mediactl start              Start enabled services
-mediactl password           Show Frigate's first-boot admin password
+mediactl password           Show Frigate and Calibre-Web admin passwords
 mediactl uninstall          Stop/remove containers; keep your data
 mediactl uninstall --purge  Also delete media, recordings and app data after confirmation
 ```
