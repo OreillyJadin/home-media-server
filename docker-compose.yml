@@ -22,7 +22,6 @@ services:
     shm_size: "${FRIGATE_SHM:-512mb}"
     ports:
       - "8971:8971"
-      - "8554:8554"
       - "8555:8555/tcp"
       - "8555:8555/udp"
     volumes:

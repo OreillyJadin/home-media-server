@@ -95,6 +95,7 @@ Install the Tailscale app on your phone with the same account, then open `http:/
 - Change default camera passwords, and use a unique password for each camera.
 - Put cameras on an isolated network/VLAN and block their internet access in your router where possible.
 - **Dual-NIC tip:** with a dual-Ethernet mini PC such as the Beelink EQ13, connect the second Ethernet port to a camera-only network or PoE switch. This can keep cameras from reaching the internet.
+- Port 8554 (raw RTSP restreams) is not published because it has no login. Only add it if another app such as Home Assistant needs it, and add RTSP credentials in go2rtc first.
 - Do not forward Jellyfin or Frigate ports directly to the public internet.
 - Frigate's example camera is disabled until you configure it. Replace the sample credentials and addresses before enabling it.
 - Jellyfin and Frigate are available to devices on your local network; secure your server and network accordingly.
