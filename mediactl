@@ -96,19 +96,42 @@ case "${1:-}" in
     shift
     docker compose --profile photos --profile books down
     if [[ "${1:-}" == --purge ]]; then
-      printf 'This permanently deletes the configured media and recordings directories. Type DELETE to continue: '
+      media_dir="$(read_env_setting MEDIA_DIR)"
+      recordings_dir="$(read_env_setting RECORDINGS_DIR)"
+      immich_upload_dir="$(read_env_setting IMMICH_UPLOAD_DIR)"
+      if [[ -z "${immich_upload_dir}" && -n "${media_dir}" && "${media_dir}" != / ]]; then
+        immich_upload_dir="${media_dir%/}/immich"
+      fi
+      if [[ -z "${media_dir}" || "${media_dir}" == / ||
+        -z "${recordings_dir}" || "${recordings_dir}" == / ||
+        -z "${immich_upload_dir}" || "${immich_upload_dir}" == / ]]; then
+        printf 'Refusing to purge: media, recordings or Immich upload directory is empty or root.\n' >&2
+        exit 1
+      fi
+      media_dir_resolved="$(realpath -m -- "${media_dir}")"
+      recordings_dir_resolved="$(realpath -m -- "${recordings_dir}")"
+      immich_upload_dir_resolved="$(realpath -m -- "${immich_upload_dir}")"
+      if [[ "${media_dir_resolved}" == / || "${recordings_dir_resolved}" == / ||
+        "${immich_upload_dir_resolved}" == / ]]; then
+        printf 'Refusing to purge: media, recordings or Immich upload directory resolves to root.\n' >&2
+        exit 1
+      fi
+      upload_inside_media=false
+      case "${immich_upload_dir_resolved}" in
+        "${media_dir_resolved}"|"${media_dir_resolved}/"*)
+          upload_inside_media=true
+          ;;
+      esac
+      printf 'This permanently deletes media (%s), recordings (%s), and Immich uploads (%s), plus app data. Type DELETE to continue: ' \
+        "${media_dir}" "${recordings_dir}" "${immich_upload_dir}"
       IFS= read -r confirmation
       if [[ "${confirmation}" != DELETE ]]; then
         printf 'Purge cancelled. Containers were stopped; data was kept.\n'
         exit 0
       fi
-      media_dir="$(read_env_setting MEDIA_DIR)"
-      recordings_dir="$(read_env_setting RECORDINGS_DIR)"
-      if [[ -n "${media_dir}" && "${media_dir}" != / && -n "${recordings_dir}" && "${recordings_dir}" != / ]]; then
-        rm -rf -- "${media_dir}" "${recordings_dir}"
-      else
-        printf 'Refusing to purge: media or recordings directory is empty or root.\n' >&2
-        exit 1
+      rm -rf -- "${media_dir}" "${recordings_dir}"
+      if [[ "${upload_inside_media}" == false ]]; then
+        rm -rf -- "${immich_upload_dir_resolved}"
       fi
       rm -rf -- "${APP_DIR}/config" "${APP_DIR}/cache"
       rm -rf -- "${APP_DIR}/db"
