@@ -8,7 +8,7 @@ Prices are US prices I checked on **Nov 21, 2026** (Black Friday week). They cha
 | --- | --- | --- |
 | **Starter** | 1 camera, a few hundred movies | **~$902** |
 | **Recommended** | 1 camera, big library | **~$1,293** |
-| **UniFi** (you already have a UDM Pro) | 1 UniFi camera recorded by Protect, with Frigate AI on top, big library, rack | **~$1,600–1,625** |
+| **UniFi** (you already have a UDM Pro) | 1 UniFi camera recorded by Protect, with Frigate AI on top, big library, rack | **~$1,645–1,660** |
 | **Pro** | 1 premium night-vision camera, huge library, several people streaming at once | **~$1,993** |
 
 Every list has **one camera**.
@@ -66,6 +66,7 @@ Buy one **wired PoE camera**: one Ethernet cable carries both power and video. S
 | Item | Notes | Price | Link |
 | --- | --- | --- | --- |
 | **TP-Link TL-PoE150S** PoE injector | Powers the camera over its Ethernet cable. Plug and play. Skip it if you already have a PoE switch. | $15.99 | [Amazon](https://www.amazon.com/dp/B001PS9E5I) |
+| **TP-Link TL-SG1005P** (5-port, 4 PoE) — instead of the injector | Powers the camera and works as a regular switch for your other wired devices. Used in the UniFi build. Check the model has a **P**: non-PoE "Smart Switch" models run on 5V and can't power a camera. | $44.99 | [Amazon](https://www.amazon.com/dp/B076HZFY3F) |
 | **Outdoor Cat6, 100 ft** (UV-resistant, direct burial) | Runs to the camera. Get a shorter cable when the run is shorter. | $53.98 | [Amazon](https://www.amazon.com/dp/B0873WMNPG) |
 
 **Wiring:** camera → PoE injector (or PoE switch) → the mini PC's **second** Ethernet port (EQ13). The mini PC's first port goes to your router. The camera can then talk to Frigate but never reach the internet. If you only have one port, plug the injector into the router and block the camera's internet access in your router settings.
@@ -134,7 +135,7 @@ The APC UPS isn't rack-mount; set it on the floor under the rack.
 | **Total** | | **~$1,293** |
 
 ### UniFi build (with a UDM Pro you already own)
-About **$1,600–1,625**, not counting the UDM Pro. UniFi Protect records the camera 24/7 to the drive in the UDM Pro bay. Frigate on the mini PC watches the same stream for person/car/animal detection (setup in the [UniFi guide](UNIFI.md#4a-frigate-and-unifi-protect-together)).
+About **$1,645–1,660**, not counting the UDM Pro. UniFi Protect records the camera 24/7 to the drive in the UDM Pro bay. Frigate on the mini PC watches the same stream for person/car/animal detection (setup in the [UniFi guide](UNIFI.md#4a-frigate-and-unifi-protect-together)).
 
 | Item | Qty | Cost |
 | --- | --- | --- |
@@ -143,12 +144,12 @@ About **$1,600–1,625**, not counting the UDM Pro. UniFi Protect records the ca
 | Toshiba MG08 16 TB (refurb), for media | 1 | $399 |
 | UniFi G5 Bullet | 1 | $129–148 |
 | Seagate SkyHawk 4 TB, in the UDM Pro bay | 1 | $160 |
-| PoE: your TP-Link PoE switch, or a UniFi U-POE-af injector | 1 | $0–8 |
+| TP-Link TL-SG1005P PoE switch | 1 | $45 |
 | Outdoor Cat6 100 ft | 1 | $54 |
 | 6U rack + 2 shelves + power strip ([section 6](#6-rack-optional)) | 1 | $251 |
 | APC BE600M1 | 1 | $84 |
 | onn 4K Pro | 1 | $70 |
-| **Total** | | **~$1,600–1,625** |
+| **Total** | | **~$1,645–1,660** |
 
 ### Pro (~$1,993)
 | Item | Qty | Cost |

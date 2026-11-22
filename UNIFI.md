@@ -57,7 +57,7 @@ Prices are from the official UniFi US store, checked Nov 21, 2026. The range is 
 
 | Item | Notes | Price | Link |
 | --- | --- | --- | --- |
-| **UniFi PoE injector** (U-POE-af) | Powers the one camera. Skip it if your TP-Link switch has PoE | $8 | [UI Store](https://store.ui.com/us/en/products/u-poe-af) |
+| **UniFi PoE injector** (U-POE-af) | Powers the one camera. Skip it if you use a PoE switch such as the TP-Link TL-SG1005P from the [buying guide](BUYING_GUIDE.md#4-network-gear) | $8 | [UI Store](https://store.ui.com/us/en/products/u-poe-af) |
 | **UniFi Switch Lite 8 PoE** (USW-Lite-8-PoE), optional | Only if you want the camera's switch port managed in UniFi | $109–120 | [UI Store](https://store.ui.com/us/en/products/usw-lite-8-poe) |
 | **UniFi G5 Bullet** (UVC-G5-Bullet) | 2K (4 MP) camera, for Protect | $129–148 | [UI Store](https://store.ui.com/us/en/products/uvc-g5-bullet) |
 | **UniFi G5 Turret Ultra** (UVC-G5-Turret-Ultra) | 2K (4 MP) compact turret, for Protect | $129–151 | [UI Store](https://store.ui.com/us/en/products/uvc-g5-turret-ultra) |
