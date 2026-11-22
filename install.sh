@@ -271,18 +271,22 @@ chown "${PUID}:${PGID}" \
   "${RECORDINGS_DIR}"
 
 CALIBRE_LIBRARY_DB="${MEDIA_DIR}/books/metadata.db"
+CALIBRE_LIBRARY_DB_READY=1
 if [[ ! -f "${CALIBRE_LIBRARY_DB}" ]]; then
   CALIBRE_LIBRARY_DB_TMP="${CALIBRE_LIBRARY_DB}.tmp.$$"
   if ! curl -fsSL \
     'https://raw.githubusercontent.com/janeczku/calibre-web/79d35711d73491881ecd2b13ded02c277543dbcb/library/metadata.db' \
     -o "${CALIBRE_LIBRARY_DB_TMP}"; then
     rm -f -- "${CALIBRE_LIBRARY_DB_TMP}"
-    printf 'Could not download the blank Calibre library database.\n' >&2
-    exit 1
+    printf 'WARNING: Could not download the blank Calibre library database; add a Calibre library before using Calibre-Web.\n' >&2
+    CALIBRE_LIBRARY_DB_READY=0
+  else
+    mv -- "${CALIBRE_LIBRARY_DB_TMP}" "${CALIBRE_LIBRARY_DB}"
   fi
-  mv -- "${CALIBRE_LIBRARY_DB_TMP}" "${CALIBRE_LIBRARY_DB}"
 fi
-chown "${PUID}:${PGID}" "${CALIBRE_LIBRARY_DB}"
+if [[ "${CALIBRE_LIBRARY_DB_READY}" == 1 ]]; then
+  chown "${PUID}:${PGID}" "${CALIBRE_LIBRARY_DB}"
+fi
 
 if [[ ! -f config/frigate/config.yml ]]; then
   sed "s/__OPENVINO_DEVICE__/${OPENVINO_DEVICE}/g" config-templates/frigate.yml >config/frigate/config.yml
