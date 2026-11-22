@@ -79,6 +79,14 @@ The Intel graphics device (`/dev/dri`) is optional. The installer enables the GP
 
    For Reolink cameras at 5MP or lower, Frigate recommends the HTTP-FLV main stream for reliability; see the [Reolink camera configuration guide](https://docs.frigate.video/configuration/camera_specific#reolink-cameras). Some newer high-resolution models need different stream settings, so check that guide before choosing a camera.
 
+## Dashboard
+
+Open `http://SERVER-IP:3000` for the dashboard. Its Jellyfin, Frigate, and router tiles include live status dots.
+
+To enable the Jellyfin widget, create an API key in Jellyfin under **Dashboard → API Keys**, paste it into `config/homepage/services.yaml`, and run `mediactl restart homepage`.
+
+If Homepage shows **Host validation failed**, add the address you are using (including `:3000`) to `HOMEPAGE_ALLOWED_HOSTS` in `.env`, separated by commas with no spaces, then run `mediactl start`.
+
 ## Remote access
 
 For remote access, use [Tailscale](https://tailscale.com/) rather than opening ports on your router. The installer offers to install it (default: No). To add it later:
@@ -107,12 +115,13 @@ Install the Tailscale app on your phone with the same account, then open `http:/
 ├── .env                         # Your local settings and passwords
 ├── cache/jellyfin/              # Jellyfin temporary cache
 ├── config/
+│   ├── homepage/                # Dashboard services, settings, widgets and bookmarks
 │   ├── frigate/config.yml       # Frigate settings and camera setup
 │   └── jellyfin/                # Jellyfin settings
 ├── docker-compose.yml           # Services without optional GPU devices
 ├── docker-compose.gpu.yml       # Optional Intel graphics devices
 ├── mediactl                     # Service management helper
-└── config-templates/frigate.yml # Starter Frigate configuration
+└── config-templates/            # Starter Frigate and Homepage configurations
 ```
 
 Media is stored in `/srv/media` and Frigate recordings in `/srv/recordings` by default. The installer creates them; you can choose other directories during setup.

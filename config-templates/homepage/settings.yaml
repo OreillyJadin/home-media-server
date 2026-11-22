@@ -1,0 +1,12 @@
+title: Home Media Server
+theme: dark
+layout:
+  Media:
+    style: row
+    columns: 2
+  Cameras:
+    style: row
+    columns: 2
+  Network:
+    style: row
+    columns: 2

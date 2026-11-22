@@ -15,6 +15,8 @@ jobs:
           sudo apt-get install -y shellcheck
       - name: Check shell scripts
         run: shellcheck install.sh mediactl
+      - name: Validate YAML templates
+        run: python3 -c 'import yaml,sys; [yaml.safe_load(open(f)) for f in sys.argv[1:]]' config-templates/frigate.yml config-templates/homepage/services.yaml config-templates/homepage/settings.yaml config-templates/homepage/widgets.yaml config-templates/homepage/bookmarks.yaml
       - name: Validate base Compose configuration
         run: |
           cp .env.example .env

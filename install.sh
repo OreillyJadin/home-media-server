@@ -169,6 +169,15 @@ else
   printf 'Warning: /dev/dri/renderD128 was not found. Hardware video transcoding is off; Frigate detection will use the CPU.\n'
 fi
 
+LAN_IP="$(hostname -I | awk '{print $1}')"
+if [[ -z "${LAN_IP}" ]]; then
+  LAN_IP=localhost
+fi
+GATEWAY_IP="$(ip route | awk '/^default/ {print $3; exit}' || true)"
+if [[ -z "${GATEWAY_IP}" ]]; then
+  GATEWAY_IP=192.168.1.1
+fi
+
 if [[ ! -f .env ]]; then
   if [[ "${FRIGATE_RTSP_PASSWORD}" == *"'"* ]]; then
     printf 'FRIGATE_RTSP_PASSWORD must not contain a single quote.\n' >&2
@@ -185,8 +194,13 @@ if [[ ! -f .env ]]; then
     printf '# Camera RTSP password; replace this with the camera password before adding cameras.\n'
     printf "FRIGATE_RTSP_PASSWORD='%s'\n" "${FRIGATE_RTSP_PASSWORD}"
     printf 'FRIGATE_SHM=%s\n' "${FRIGATE_SHM}"
+    printf 'HOMEPAGE_ALLOWED_HOSTS=%s:3000,localhost:3000\n' "${LAN_IP}"
   } >.env
   chmod 600 .env
+fi
+if [[ -f .env ]] && ! grep -q '^HOMEPAGE_ALLOWED_HOSTS=' .env; then
+  printf 'HOMEPAGE_ALLOWED_HOSTS=%s:3000,localhost:3000\n' "${LAN_IP}" >>.env
+  printf 'Added HOMEPAGE_ALLOWED_HOSTS to .env.\n'
 fi
 chown "${PUID}:${PGID}" .env
 chmod 600 .env
@@ -200,6 +214,7 @@ mkdir -p \
   "${RECORDINGS_DIR}" \
   config/jellyfin \
   config/frigate \
+  config/homepage \
   cache/jellyfin
 chown "${PUID}:${PGID}" \
   "${MEDIA_DIR}" \
@@ -209,11 +224,22 @@ chown "${PUID}:${PGID}" \
   "${MEDIA_DIR}/photos" \
   "${MEDIA_DIR}/home-videos" \
   "${RECORDINGS_DIR}"
-chown -R "${PUID}:${PGID}" config cache
 
 if [[ ! -f config/frigate/config.yml ]]; then
   sed "s/__OPENVINO_DEVICE__/${OPENVINO_DEVICE}/g" config-templates/frigate.yml >config/frigate/config.yml
 fi
+
+for template in config-templates/homepage/*.yaml; do
+  target="config/homepage/$(basename "${template}")"
+  if [[ ! -f "${target}" ]]; then
+    sed \
+      -e "s|__LAN_IP__|${LAN_IP}|g" \
+      -e "s|__GATEWAY_IP__|${GATEWAY_IP}|g" \
+      "${template}" >"${target}"
+  fi
+done
+
+chown -R "${PUID}:${PGID}" config cache
 
 docker compose pull
 docker compose up -d
@@ -235,10 +261,7 @@ else
   printf 'Frigate has not logged its first-boot password yet. Check it with: mediactl logs frigate\n'
 fi
 
-LAN_IP="$(hostname -I | awk '{print $1}')"
-if [[ -z "${LAN_IP}" ]]; then
-  LAN_IP=localhost
-fi
+printf 'Dashboard: http://%s:3000\n' "${LAN_IP}"
 printf 'Jellyfin: http://%s:8096\n' "${LAN_IP}"
 printf 'Frigate:  https://%s:8971 (your browser will warn about its self-signed certificate)\n' "${LAN_IP}"
 
