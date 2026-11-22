@@ -4,6 +4,7 @@ A simple Docker setup for a home media library with Jellyfin and Frigate. It is 
 
 - **What to buy (with prices):** [BUYING_GUIDE.md](BUYING_GUIDE.md)
 - **Getting movies onto it (legal sources):** [MEDIA_GUIDE.md](MEDIA_GUIDE.md)
+- **Have a UniFi Dream Machine Pro?** [UNIFI.md](UNIFI.md): camera VLAN, built-in VPN, UniFi Protect vs Frigate
 
 ## Install
 
@@ -89,7 +90,9 @@ If Homepage shows **Host validation failed**, add the address you are using (inc
 
 ## Remote access
 
-For remote access, use [Tailscale](https://tailscale.com/) rather than opening ports on your router. The installer offers to install it (default: No). To add it later:
+If you have a UniFi Dream Machine Pro, its built-in Teleport/WireGuard VPN does this without Tailscale ([UNIFI.md](UNIFI.md#3-remote-access-without-opening-ports)).
+
+Otherwise, use [Tailscale](https://tailscale.com/) rather than opening ports on your router. The installer offers to install it (default: No). To add it later:
 
 ```bash
 curl -fsSL https://tailscale.com/install.sh | sh
@@ -101,7 +104,7 @@ Install the Tailscale app on your phone with the same account, then open `http:/
 ## Security and networking
 
 - Change default camera passwords, and use a unique password for each camera.
-- Put cameras on an isolated network/VLAN and block their internet access in your router where possible.
+- Put cameras on an isolated network/VLAN and block their internet access in your router where possible ([UniFi steps](UNIFI.md#2-put-the-cameras-on-their-own-network-vlan)).
 - **Dual-NIC tip:** with a dual-Ethernet mini PC such as the Beelink EQ13, connect the second Ethernet port to a camera-only network or PoE switch. This can keep cameras from reaching the internet.
 - Port 8554 (raw RTSP restreams) is not published because it has no login. Only add it if another app such as Home Assistant needs it, and add RTSP credentials in go2rtc first.
 - Do not forward Jellyfin or Frigate ports directly to the public internet.
@@ -153,5 +156,7 @@ mediactl uninstall --purge  Also delete media and recordings after confirmation
 
 - [Buying guide](BUYING_GUIDE.md): hardware with prices
 - [Media guide](MEDIA_GUIDE.md): getting content legally and naming files
+- [UniFi guide](UNIFI.md): UDM Pro network setup and UniFi Protect
+- [Why not Kubernetes or Proxmox?](BUYING_GUIDE.md#what-about-kubernetes)
 - [Frigate documentation](https://docs.frigate.video/)
 - [Jellyfin documentation](https://jellyfin.org/docs/)

@@ -26,7 +26,6 @@
         icon: unifi.png
         href: https://__GATEWAY_IP__
         description: UniFi / router admin
-        siteMonitor: https://__GATEWAY_IP__
     # - UniFi Protect:
     #     icon: unifi.png
     #     href: https://__GATEWAY_IP__/protect/

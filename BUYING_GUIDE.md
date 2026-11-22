@@ -68,6 +68,8 @@ Buy **wired PoE cameras**: one Ethernet cable carries both power and video. Skip
 
 **Wiring:** cameras → PoE switch → the mini PC's **second** Ethernet port (EQ13). The mini PC's first port goes to your router. Your cameras can then talk to Frigate but never reach the internet. If you only have one port, plug the switch into the router and block the cameras' internet access in your router settings.
 
+**Have a UniFi Dream Machine Pro?** It has no PoE ports, so you still need one of the PoE switches above. You can plug it into a UDM Pro port that's set to a camera VLAN, or buy a UniFi PoE switch instead. The UDM Pro also makes the second Ethernet port unnecessary and gives you a built-in VPN. See the [UniFi guide](UNIFI.md).
+
 ## 5. Power and TV
 
 | Item | Notes | Price | Link |
@@ -131,11 +133,15 @@ Buy **wired PoE cameras**: one Ethernet cable carries both power and video. Skip
 | **Docker** | Runs each app in its own container. The installer sets it up for you. | [docker.com](https://www.docker.com/) |
 | **Jellyfin** | Your own Netflix: movies, TV, music, photos and live TV. No account or subscription. | [jellyfin.org](https://jellyfin.org/) |
 | **Frigate** | Camera recorder (NVR) with AI person/car/animal detection that runs locally. | [frigate.video](https://frigate.video/) |
+| **Homepage** | The dashboard on port 3000, with a clickable tile and live status for each app. | [gethomepage.dev](https://gethomepage.dev/) |
 | **Tailscale** (optional) | Secure remote access from your phone without opening ports on your router. Free for personal use. | [tailscale.com](https://tailscale.com/) |
 | **balenaEtcher** | Writes the Ubuntu installer to a USB stick (you'll need an 8 GB+ stick). | [etcher.balena.io](https://etcher.balena.io/) |
 
 ### Why Ubuntu and not Proxmox?
 Proxmox turns the mini PC into a host for virtual machines. That's great if you want to run lots of separate systems, but it adds a layer: you'd have to pass the Intel graphics chip through to a VM or container before Jellyfin and Frigate could use it, and that's the most common thing to break. On a single small box, plain Ubuntu plus Docker is simpler, faster, and what the one-line installer expects. You can always move to Proxmox later. The `config/` folder and your drives move over as-is.
+
+### What about Kubernetes?
+Not for this. Kubernetes is built to spread apps across many servers and restart them on another machine when one dies. On a single mini PC there's nowhere else to move them, so you'd get extra moving parts and lose 1–2 GB of RAM that Frigate could use. Docker Compose (what this repo uses) is the right tool for one box.
 
 ## Installing Ubuntu (one time)
 1. On another computer, download Ubuntu Server 24.04 LTS and flash it to a USB stick with balenaEtcher.
