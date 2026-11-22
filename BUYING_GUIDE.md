@@ -8,7 +8,7 @@ Prices are US prices I checked on **Nov 21, 2026** (Black Friday week). They cha
 | --- | --- | --- |
 | **Starter** | 1 camera, a few hundred movies | **~$902** |
 | **Recommended** | 1 camera, big library | **~$1,293** |
-| **UniFi** (you already have a UDM Pro) | 1 UniFi camera recorded by Protect, with Frigate AI on top, big library, rack | **~$1,645–1,660** |
+| **UniFi** (you already have a UDM Pro) | 1 UniFi camera recorded by Protect, with Frigate AI on top, big library, SnapRAID parity, rack | **~$2,044–2,059** |
 | **Pro** | 1 premium night-vision camera, huge library, several people streaming at once | **~$1,993** |
 
 Every list has **one camera**.
@@ -135,13 +135,13 @@ The APC UPS isn't rack-mount; set it on the floor under the rack.
 | **Total** | | **~$1,293** |
 
 ### UniFi build (with a UDM Pro you already own)
-About **$1,645–1,660**, not counting the UDM Pro. UniFi Protect records the camera 24/7 to the drive in the UDM Pro bay. Frigate on the mini PC watches the same stream for person/car/animal detection (setup in the [UniFi guide](UNIFI.md#4a-frigate-and-unifi-protect-together)).
+About **$2,044–2,059**, not counting the UDM Pro. UniFi Protect records the camera 24/7 to the drive in the UDM Pro bay. Frigate on the mini PC watches the same stream for person/car/animal detection (setup in the [UniFi guide](UNIFI.md#4a-frigate-and-unifi-protect-together)). One MG08 holds media and the second is SnapRAID parity; see the [storage guide](STORAGE.md).
 
 | Item | Qty | Cost |
 | --- | --- | --- |
 | Beelink EQ13 | 1 | $299 |
 | TerraMaster D4-320 | 1 | $152 |
-| Toshiba MG08 16 TB (refurb), for media | 1 | $399 |
+| Toshiba MG08 16 TB (refurb), media + SnapRAID parity | 2 | $798 |
 | UniFi G5 Bullet | 1 | $129–148 |
 | Seagate SkyHawk 4 TB, in the UDM Pro bay | 1 | $160 |
 | TP-Link TL-SG1005P PoE switch | 1 | $45 |
@@ -149,7 +149,24 @@ About **$1,645–1,660**, not counting the UDM Pro. UniFi Protect records the ca
 | 6U rack + 2 shelves + power strip ([section 6](#6-rack-optional)) | 1 | $251 |
 | APC BE600M1 | 1 | $84 |
 | onn 4K Pro | 1 | $70 |
-| **Total** | | **~$1,645–1,660** |
+| **Total** | | **~$2,044–2,059** |
+
+### Already have an EliteDesk, UDM Pro and Ethernet cable
+
+This list excludes the PC, UDM Pro and Ethernet cable you already own. One MG08 is the media disk and the second is SnapRAID parity; see the [storage guide](STORAGE.md).
+
+| Item | Qty | Cost |
+| --- | --- | --- |
+| UniFi G5 Bullet | 1 | $129–148 |
+| Seagate SkyHawk 4 TB, in the UDM Pro bay | 1 | $160 |
+| TP-Link TL-SG1005P PoE switch | 1 | $44.99 |
+| TerraMaster D4-320 | 1 | $152 |
+| Toshiba MG08 16 TB (refurb), one data disk and one parity disk | 2 | $798 |
+| NavePoint 6U rack | 1 | $157.99 |
+| 1U vented shelf | 2 | $47.98 |
+| VEVOR 1U power strip | 1 | $44.90 |
+| APC BE600M1 | 1 | $83.99 |
+| **Total** | | **$1,618.85–1,637.85** |
 
 ### Pro (~$1,993)
 | Item | Qty | Cost |

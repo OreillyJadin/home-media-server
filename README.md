@@ -4,12 +4,13 @@ A simple Docker setup for a home media library with Jellyfin and Frigate, plus o
 
 - **What to buy (with prices):** [BUYING_GUIDE.md](BUYING_GUIDE.md)
 - **Getting movies onto it (legal sources):** [MEDIA_GUIDE.md](MEDIA_GUIDE.md)
+- **Multiple storage drives:** [STORAGE.md](STORAGE.md): SnapRAID parity and a mergerfs media pool
 - **Have a UniFi Dream Machine Pro?** [UNIFI.md](UNIFI.md): camera VLAN, built-in VPN, UniFi Protect vs Frigate
 
 ## Install
 
 1. Install Ubuntu Server 24.04 on the mini PC ([steps](BUYING_GUIDE.md#installing-ubuntu-one-time)).
-2. If you use an external drive, set it up first ([Using an external drive](#using-an-external-drive)).
+2. If you use a single external drive, set it up first ([Using an external drive](#using-an-external-drive)). For a multi-drive SnapRAID and mergerfs pool, see [STORAGE.md](STORAGE.md).
 3. Log in to the server and run:
 
 ```bash
@@ -39,7 +40,7 @@ echo 'LABEL=storage /mnt/storage ext4 defaults,nofail 0 2' | sudo tee -a /etc/fs
 sudo mount -a && df -h /mnt/storage
 ```
 
-Then install with `MEDIA_DIR=/mnt/storage/media` and `RECORDINGS_DIR=/mnt/storage/recordings` (type them at the prompts, or pass them as shown above). With two drives, mount each one (e.g. `/mnt/media` and `/mnt/recordings`) and point each setting at its own drive.
+Then install with `MEDIA_DIR=/mnt/storage/media` and `RECORDINGS_DIR=/mnt/storage/recordings` (type them at the prompts, or pass them as shown above). For a redundant multi-drive media pool, follow [STORAGE.md](STORAGE.md).
 
 ## What you need
 
@@ -160,7 +161,7 @@ Install the Tailscale app on your phone with the same account, then open `http:/
 └── config-templates/            # Starter Frigate and Homepage configurations
 ```
 
-Media is stored in `/srv/media` and Frigate recordings in `/srv/recordings` by default. The installer creates them; you can choose other directories during setup. Optional photos, books, and audiobook services are enabled by the `photos,books` Compose profiles in `.env`.
+Media is stored in `/srv/media` and Frigate recordings in `/srv/recordings` by default. The installer creates them; you can choose other directories during setup. See [STORAGE.md](STORAGE.md) to pool multiple media drives with SnapRAID and mergerfs. Optional photos, books, and audiobook services are enabled by the `photos,books` Compose profiles in `.env`.
 
 ## `mediactl` commands
 
@@ -189,6 +190,7 @@ mediactl uninstall --purge  Also delete media, recordings and app data after con
 
 - [Buying guide](BUYING_GUIDE.md): hardware with prices
 - [Media guide](MEDIA_GUIDE.md): getting content legally and naming files
+- [Storage guide](STORAGE.md): multi-drive pooling and parity
 - [UniFi guide](UNIFI.md): UDM Pro network setup and UniFi Protect
 - [Why not Kubernetes or Proxmox?](BUYING_GUIDE.md#what-about-kubernetes)
 - [Frigate documentation](https://docs.frigate.video/)
