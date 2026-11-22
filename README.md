@@ -1,6 +1,6 @@
 # Home Media Server
 
-A simple Docker setup for a home media library with Jellyfin and Frigate. It is designed for Ubuntu Server 24.04 on a small Intel mini PC. You do not need to know Docker to get started.
+A simple Docker setup for a home media library with Jellyfin and Frigate, plus optional apps for photos, audiobooks and e-books. It is designed for Ubuntu Server 24.04 on a small Intel mini PC. You do not need to know Docker to get started.
 
 - **What to buy (with prices):** [BUYING_GUIDE.md](BUYING_GUIDE.md)
 - **Getting movies onto it (legal sources):** [MEDIA_GUIDE.md](MEDIA_GUIDE.md)
@@ -25,7 +25,7 @@ curl -fsSL https://raw.githubusercontent.com/OreillyJadin/home-media-server/main
   | sudo NONINTERACTIVE=1 MEDIA_DIR=/mnt/storage/media RECORDINGS_DIR=/mnt/storage/recordings bash
 ```
 
-Running the installer again is safe: it keeps your existing `.env` and Frigate `config.yml`.
+Running the installer again is safe: it keeps your existing `.env` and Frigate `config.yml`. Homepage templates are copied only when missing; to get new dashboard tiles on an existing install, delete `config/homepage/services.yaml` and `config/homepage/settings.yaml`, then rerun the installer.
 
 ## Using an external drive
 
@@ -80,13 +80,43 @@ The Intel graphics device (`/dev/dri`) is optional. The installer enables the GP
 
    For Reolink cameras at 5MP or lower, Frigate recommends the HTTP-FLV main stream for reliability; see the [Reolink camera configuration guide](https://docs.frigate.video/configuration/camera_specific#reolink-cameras). Some newer high-resolution models need different stream settings, so check that guide before choosing a camera.
 
+4. Open Immich at `http://SERVER-IP:2283` and create the administrator account on first visit.
+5. Open Audiobookshelf at `http://SERVER-IP:13378` to create its initial account.
+6. Open Calibre-Web at `http://SERVER-IP:8083` and sign in with `admin` / `admin123`; change the password immediately.
+
 ## Dashboard
 
-Open `http://SERVER-IP:3000` for the dashboard. The Jellyfin and Frigate tiles show live status dots; the router tile links to your UniFi/router admin page.
+Open `http://SERVER-IP:3000` for the dashboard. Its tiles link to Jellyfin, Frigate, Immich, Audiobookshelf, Calibre-Web and your router; service tiles show live status dots.
 
 To enable the Jellyfin widget, create an API key in Jellyfin under **Dashboard → API Keys**, paste it into `config/homepage/services.yaml`, and run `mediactl restart homepage`.
 
 If Homepage shows **Host validation failed**, add the address you are using (including `:3000`) to `HOMEPAGE_ALLOWED_HOSTS` in `.env`, separated by commas with no spaces, then run `mediactl start`.
+
+## Photos (Immich)
+
+Install the Immich phone app and enable automatic backup to upload photos to your server. On first visit, create the administrator account. To include your existing photos, open **Administration → Libraries**, add an External Library, and set its path to `/mnt/photos`. The machine-learning service can use about 1–2 GB of RAM; on an 8 GB system, remove `photos` from `COMPOSE_PROFILES` in `.env` and run `mediactl start` if you need to reduce memory use.
+
+## Audiobooks (Audiobookshelf)
+
+Organize audiobooks as `Author/Book Title/files` under `/srv/media/audiobooks` (or your chosen media directory). Put podcasts under `/srv/media/podcasts`. The Audiobookshelf phone app can connect to `http://SERVER-IP:13378` for listening and downloads.
+
+## E-books and Kindle (Calibre-Web)
+
+Calibre-Web starts with the default login `admin` / `admin123`. Change it as soon as you sign in.
+
+1. In Calibre-Web, open **Admin → Basic Configuration** and set the Calibre Library path to `/books`, then save. The installer creates a blank Calibre library there.
+2. In **Admin → Basic Configuration**, enable uploads if you want to add books through the browser.
+3. Open **Admin → Edit Email Server Settings** and configure Gmail:
+   - SMTP server: `smtp.gmail.com`
+   - Port: `587`
+   - Encryption: STARTTLS
+   - Username: your Gmail address
+   - Password: a Gmail app password
+4. In Amazon **Manage Your Content and Devices → Preferences → Personal Document Settings**, add your Gmail sender address to the **Approved Personal Document E-mail List**.
+5. In Calibre-Web, open your user profile and enter your Kindle email address.
+6. Open a book and choose **Send to Kindle**. EPUB files work.
+
+To disable Audiobookshelf and Calibre-Web, remove `books` from `COMPOSE_PROFILES` in `.env` and run `mediactl start`.
 
 ## Remote access
 
@@ -99,7 +129,7 @@ curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up
 ```
 
-Install the Tailscale app on your phone with the same account, then open `http://SERVER-TAILSCALE-IP:8096` (Jellyfin) or `https://SERVER-TAILSCALE-IP:8971` (Frigate) from anywhere. `tailscale ip -4` on the server shows that address.
+Install the Tailscale app on your phone with the same account, then open `http://SERVER-TAILSCALE-IP:8096` (Jellyfin), `https://SERVER-TAILSCALE-IP:8971` (Frigate), `http://SERVER-TAILSCALE-IP:2283` (Immich), `http://SERVER-TAILSCALE-IP:13378` (Audiobookshelf), `http://SERVER-TAILSCALE-IP:8083` (Calibre-Web), or `http://SERVER-TAILSCALE-IP:3000` (dashboard) from anywhere. `tailscale ip -4` on the server shows that address.
 
 ## Security and networking
 
@@ -116,18 +146,21 @@ Install the Tailscale app on your phone with the same account, then open `http:/
 ```text
 .
 ├── .env                         # Your local settings and passwords
-├── cache/jellyfin/              # Jellyfin temporary cache
+├── cache/                       # Jellyfin and Immich temporary caches
 ├── config/
+│   ├── audiobookshelf/          # Audiobookshelf settings and metadata
+│   ├── calibre-web/             # E-book server settings
 │   ├── homepage/                # Dashboard services, settings, widgets and bookmarks
 │   ├── frigate/config.yml       # Frigate settings and camera setup
 │   └── jellyfin/                # Jellyfin settings
+├── db/immich/                   # Immich database; kept by uninstall unless purged
 ├── docker-compose.yml           # Services without optional GPU devices
 ├── docker-compose.gpu.yml       # Optional Intel graphics devices
 ├── mediactl                     # Service management helper
 └── config-templates/            # Starter Frigate and Homepage configurations
 ```
 
-Media is stored in `/srv/media` and Frigate recordings in `/srv/recordings` by default. The installer creates them; you can choose other directories during setup.
+Media is stored in `/srv/media` and Frigate recordings in `/srv/recordings` by default. The installer creates them; you can choose other directories during setup. Optional photos, books, and audiobook services are enabled by the `photos,books` Compose profiles in `.env`.
 
 ## `mediactl` commands
 
@@ -136,13 +169,13 @@ Media is stored in `/srv/media` and Frigate recordings in `/srv/recordings` by d
 ```text
 mediactl status             Show service status
 mediactl logs [service]     Follow logs (for example: mediactl logs frigate)
-mediactl restart [service]  Restart both services or one service
-mediactl update             Pull updates and restart the services
-mediactl stop               Stop the services
-mediactl start              Start the services
+mediactl restart [service]  Restart a service (for example: immich-server)
+mediactl update             Pull updates and restart enabled services
+mediactl stop               Stop enabled services
+mediactl start              Start enabled services
 mediactl password           Show Frigate's first-boot admin password
 mediactl uninstall          Stop/remove containers; keep your data
-mediactl uninstall --purge  Also delete media and recordings after confirmation
+mediactl uninstall --purge  Also delete media, recordings and app data after confirmation
 ```
 
 ## Troubleshooting

@@ -4,6 +4,9 @@ layout:
   Media:
     style: row
     columns: 2
+  Library:
+    style: row
+    columns: 3
   Cameras:
     style: row
     columns: 2

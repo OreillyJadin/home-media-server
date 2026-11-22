@@ -12,6 +12,22 @@
         #   key: <API key from Jellyfin Dashboard → API Keys>
         #   version: 2
         #   enableBlocks: true
+- Library:
+    - Immich:
+        icon: immich.png
+        href: http://__LAN_IP__:2283
+        description: Photos
+        siteMonitor: http://immich-server:2283/api/server/ping
+    - Audiobookshelf:
+        icon: audiobookshelf.png
+        href: http://__LAN_IP__:13378
+        description: Audiobooks & podcasts
+        siteMonitor: http://audiobookshelf:80/healthcheck
+    - Calibre-Web:
+        icon: calibre-web.png
+        href: http://__LAN_IP__:8083
+        description: E-books → Kindle
+        siteMonitor: http://calibre-web:8083
 - Cameras:
     - Frigate:
         icon: frigate.png

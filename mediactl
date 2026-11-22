@@ -29,6 +29,22 @@ read_env_setting() {
   printf '%s' "${value}"
 }
 
+profile_enabled() {
+  local profiles
+  profiles="$(read_env_setting COMPOSE_PROFILES)"
+  profiles=",${profiles//[[:space:]]/},"
+  [[ "${profiles}" == *",${1},"* ]]
+}
+
+stop_disabled_profile_services() {
+  if ! profile_enabled photos; then
+    docker compose --profile photos stop immich-server immich-machine-learning immich-redis immich-database
+  fi
+  if ! profile_enabled books; then
+    docker compose --profile books stop audiobookshelf calibre-web
+  fi
+}
+
 case "${1:-}" in
   status)
     docker compose ps
@@ -51,14 +67,17 @@ case "${1:-}" in
     ;;
   update)
     git pull --ff-only
+    stop_disabled_profile_services
     docker compose pull
     docker compose up -d
     docker image prune -f
     ;;
   stop)
+    stop_disabled_profile_services
     docker compose stop
     ;;
   start)
+    stop_disabled_profile_services
     docker compose up -d
     ;;
   password)
@@ -71,7 +90,7 @@ case "${1:-}" in
     ;;
   uninstall)
     shift
-    docker compose down
+    docker compose --profile photos --profile books down
     if [[ "${1:-}" == --purge ]]; then
       printf 'This permanently deletes the configured media and recordings directories. Type DELETE to continue: '
       IFS= read -r confirmation
@@ -88,8 +107,9 @@ case "${1:-}" in
         exit 1
       fi
       rm -rf -- "${APP_DIR}/config" "${APP_DIR}/cache"
+      rm -rf -- "${APP_DIR}/db"
     else
-      printf 'Media and recordings were kept. Use "mediactl uninstall --purge" to delete data after a confirmation prompt.\n'
+      printf 'Media, recordings, configuration, cache and database were kept. Use "mediactl uninstall --purge" to delete data after a confirmation prompt.\n'
     fi
     rm -f /usr/local/bin/mediactl
     ;;

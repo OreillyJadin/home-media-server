@@ -26,7 +26,7 @@ fi
 
 export DEBIAN_FRONTEND=noninteractive
 apt-get update
-apt-get install -y ca-certificates curl git
+apt-get install -y ca-certificates curl git openssl
 
 if ! command -v docker >/dev/null 2>&1; then
   curl -fsSL https://get.docker.com | sh
@@ -125,6 +125,15 @@ read_env_setting() {
   printf '%s' "${value}"
 }
 
+append_env_setting() {
+  local name="$1"
+  local value="$2"
+  if ! grep -q "^${name}=" .env; then
+    printf '%s=%s\n' "${name}" "${value}" >>.env
+    printf 'Added %s to .env.\n' "${name}"
+  fi
+}
+
 if [[ -f .env ]]; then
   printf 'Keeping existing .env settings.\n'
   TZ="$(read_env_setting TZ)"
@@ -136,6 +145,9 @@ if [[ -f .env ]]; then
   COMPOSE_FILE="$(read_env_setting COMPOSE_FILE)"
   FRIGATE_RTSP_PASSWORD="$(read_env_setting FRIGATE_RTSP_PASSWORD)"
   FRIGATE_SHM="$(read_env_setting FRIGATE_SHM)"
+  COMPOSE_PROFILES="$(read_env_setting COMPOSE_PROFILES)"
+  IMMICH_UPLOAD_DIR="$(read_env_setting IMMICH_UPLOAD_DIR)"
+  IMMICH_DB_PASSWORD="$(read_env_setting IMMICH_DB_PASSWORD)"
 else
   if [[ "${NONINTERACTIVE:-0}" != 1 ]]; then
     if [[ -z "${TZ+x}" ]]; then
@@ -194,13 +206,31 @@ if [[ ! -f .env ]]; then
     printf '# Camera RTSP password; replace this with the camera password before adding the camera.\n'
     printf "FRIGATE_RTSP_PASSWORD='%s'\n" "${FRIGATE_RTSP_PASSWORD}"
     printf 'FRIGATE_SHM=%s\n' "${FRIGATE_SHM}"
-    printf 'HOMEPAGE_ALLOWED_HOSTS=%s:3000,localhost:3000\n' "${LAN_IP}"
   } >.env
   chmod 600 .env
 fi
-if [[ -f .env ]] && ! grep -q '^HOMEPAGE_ALLOWED_HOSTS=' .env; then
-  printf 'HOMEPAGE_ALLOWED_HOSTS=%s:3000,localhost:3000\n' "${LAN_IP}" >>.env
-  printf 'Added HOMEPAGE_ALLOWED_HOSTS to .env.\n'
+
+if ! grep -q '^COMPOSE_PROFILES=' .env; then
+  COMPOSE_PROFILES=photos,books
+fi
+if ! grep -q '^IMMICH_UPLOAD_DIR=' .env; then
+  IMMICH_UPLOAD_DIR="${MEDIA_DIR}/immich"
+fi
+if ! grep -q '^IMMICH_DB_PASSWORD=' .env; then
+  IMMICH_DB_PASSWORD="$(openssl rand -hex 16)"
+fi
+append_env_setting HOMEPAGE_ALLOWED_HOSTS "${LAN_IP}:3000,localhost:3000"
+append_env_setting COMPOSE_PROFILES "${COMPOSE_PROFILES}"
+append_env_setting IMMICH_UPLOAD_DIR "${IMMICH_UPLOAD_DIR}"
+append_env_setting IMMICH_DB_PASSWORD "${IMMICH_DB_PASSWORD}"
+
+if [[ -z "${IMMICH_UPLOAD_DIR}" ]]; then
+  printf 'IMMICH_UPLOAD_DIR in .env must not be empty.\n' >&2
+  exit 1
+fi
+if [[ -z "${IMMICH_DB_PASSWORD}" ]]; then
+  printf 'IMMICH_DB_PASSWORD in .env must not be empty.\n' >&2
+  exit 1
 fi
 chown "${PUID}:${PGID}" .env
 chmod 600 .env
@@ -211,11 +241,21 @@ mkdir -p \
   "${MEDIA_DIR}/music" \
   "${MEDIA_DIR}/photos" \
   "${MEDIA_DIR}/home-videos" \
+  "${MEDIA_DIR}/audiobooks" \
+  "${MEDIA_DIR}/podcasts" \
+  "${MEDIA_DIR}/books" \
+  "${MEDIA_DIR}/immich" \
+  "${IMMICH_UPLOAD_DIR}" \
   "${RECORDINGS_DIR}" \
   config/jellyfin \
   config/frigate \
   config/homepage \
-  cache/jellyfin
+  config/audiobookshelf/config \
+  config/audiobookshelf/metadata \
+  config/calibre-web \
+  cache/jellyfin \
+  cache/immich-ml \
+  db/immich
 chown "${PUID}:${PGID}" \
   "${MEDIA_DIR}" \
   "${MEDIA_DIR}/movies" \
@@ -223,7 +263,26 @@ chown "${PUID}:${PGID}" \
   "${MEDIA_DIR}/music" \
   "${MEDIA_DIR}/photos" \
   "${MEDIA_DIR}/home-videos" \
+  "${MEDIA_DIR}/audiobooks" \
+  "${MEDIA_DIR}/podcasts" \
+  "${MEDIA_DIR}/books" \
+  "${MEDIA_DIR}/immich" \
+  "${IMMICH_UPLOAD_DIR}" \
   "${RECORDINGS_DIR}"
+
+CALIBRE_LIBRARY_DB="${MEDIA_DIR}/books/metadata.db"
+if [[ ! -f "${CALIBRE_LIBRARY_DB}" ]]; then
+  CALIBRE_LIBRARY_DB_TMP="${CALIBRE_LIBRARY_DB}.tmp.$$"
+  if ! curl -fsSL \
+    'https://raw.githubusercontent.com/janeczku/calibre-web/79d35711d73491881ecd2b13ded02c277543dbcb/library/metadata.db' \
+    -o "${CALIBRE_LIBRARY_DB_TMP}"; then
+    rm -f -- "${CALIBRE_LIBRARY_DB_TMP}"
+    printf 'Could not download the blank Calibre library database.\n' >&2
+    exit 1
+  fi
+  mv -- "${CALIBRE_LIBRARY_DB_TMP}" "${CALIBRE_LIBRARY_DB}"
+fi
+chown "${PUID}:${PGID}" "${CALIBRE_LIBRARY_DB}"
 
 if [[ ! -f config/frigate/config.yml ]]; then
   sed "s/__OPENVINO_DEVICE__/${OPENVINO_DEVICE}/g" config-templates/frigate.yml >config/frigate/config.yml
@@ -241,6 +300,8 @@ done
 
 chown -R "${PUID}:${PGID}" config cache
 
+ACTIVE_PROFILES="$(read_env_setting COMPOSE_PROFILES)"
+unset COMPOSE_PROFILES IMMICH_UPLOAD_DIR IMMICH_DB_PASSWORD
 docker compose pull
 docker compose up -d
 
@@ -264,6 +325,13 @@ fi
 printf 'Dashboard: http://%s:3000\n' "${LAN_IP}"
 printf 'Jellyfin: http://%s:8096\n' "${LAN_IP}"
 printf 'Frigate:  https://%s:8971 (your browser will warn about its self-signed certificate)\n' "${LAN_IP}"
+if [[ ",${ACTIVE_PROFILES//[[:space:]]/}," == *",photos,"* ]]; then
+  printf 'Immich: http://%s:2283\n' "${LAN_IP}"
+fi
+if [[ ",${ACTIVE_PROFILES//[[:space:]]/}," == *",books,"* ]]; then
+  printf 'Audiobookshelf: http://%s:13378\n' "${LAN_IP}"
+  printf 'Calibre-Web: http://%s:8083 (default login admin/admin123; change it)\n' "${LAN_IP}"
+fi
 
 ln -sfn "${INSTALL_DIR}/mediactl" /usr/local/bin/mediactl
 chmod +x install.sh mediactl

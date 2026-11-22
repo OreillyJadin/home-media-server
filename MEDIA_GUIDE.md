@@ -33,6 +33,23 @@ Put files under the media folder (default `/srv/media`) like this, and Jellyfin 
 
 Full naming rules: [Jellyfin – Movies](https://jellyfin.org/docs/general/server/media/movies) · [Jellyfin – Shows](https://jellyfin.org/docs/general/server/media/shows)
 
+## Books and audiobooks
+
+- **[Project Gutenberg](https://www.gutenberg.org/)** and **[Standard Ebooks](https://standardebooks.org/)** offer free public-domain ebooks.
+- **[LibriVox](https://librivox.org/)** offers public-domain audiobooks read by volunteers.
+- You can also buy DRM-free ebooks and audiobooks from publishers and retailers that offer them.
+
+For Audiobookshelf, organize audiobooks under `/srv/media/audiobooks` as `Author/Book Title/files`, for example:
+
+```text
+/srv/media/audiobooks/
+  Ursula K. Le Guin/
+    A Wizard of Earthsea/
+      A Wizard of Earthsea.m4b
+```
+
+Audiobookshelf also reads podcast downloads from `/srv/media/podcasts`.
+
 ## Copying files to the server
 - **From Mac/Linux:** `scp -r "The Matrix (1999)" youruser@SERVER-IP:/srv/media/movies/`
 - **From Windows:** use [WinSCP](https://winscp.net/) (drag and drop) and log in with the server's IP, username and password.
