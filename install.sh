@@ -34,7 +34,7 @@ fi
 systemctl enable --now docker
 
 SCRIPT_DIR=""
-SCRIPT_PATH="${BASH_SOURCE[0]}"
+SCRIPT_PATH="${BASH_SOURCE[0]:-}"
 if [[ -f "${SCRIPT_PATH}" ]]; then
   SCRIPT_DIR="$(cd -- "$(dirname -- "${SCRIPT_PATH}")" && pwd)"
 fi
