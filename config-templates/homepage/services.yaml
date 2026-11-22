@@ -16,7 +16,7 @@
     - Frigate:
         icon: frigate.png
         href: https://__LAN_IP__:8971
-        description: Security cameras
+        description: Security camera
         siteMonitor: http://frigate:5000/api/version
         # No Frigate widget: it would read Frigate's internal API without a login
         # and could show camera snapshots to anyone who opens the dashboard.

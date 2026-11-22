@@ -6,9 +6,12 @@ Prices are US prices I checked on **Nov 21, 2026** (Black Friday week). They cha
 
 | Tier | Good for | Approx. total |
 | --- | --- | --- |
-| **Starter** | 2 cameras, a few hundred movies | **~$1,045** |
-| **Recommended** | 4 cameras + doorbell, big library | **~$1,700** |
-| **Pro** | 6–8 cameras, huge library, several people streaming at once | **~$3,850** |
+| **Starter** | 1 camera, a few hundred movies | **~$902** |
+| **Recommended** | 1 camera, big library | **~$1,293** |
+| **UniFi** (you already have a UDM Pro) | 1 UniFi camera recorded by Protect, with Frigate AI on top, big library, rack | **~$1,600–1,625** |
+| **Pro** | 1 premium night-vision camera, huge library, several people streaming at once | **~$1,993** |
+
+Every list has **one camera**.
 
 You don't need a monitor or keyboard after setup. Borrow them for the 20 minutes it takes to install Ubuntu.
 
@@ -20,9 +23,9 @@ Get an **Intel** CPU. Intel's built-in graphics (Quick Sync) lets Jellyfin conve
 
 | Pick | Why | Price | Link |
 | --- | --- | --- | --- |
-| **Beelink EQ13** (Intel N100, 16 GB, 500 GB) — **recommended** | Frigate's own docs call it their favorite. It has **two Ethernet ports**, so the cameras get their own private network with no internet access. | ~$299 (stock comes and goes) | [Amazon](https://www.amazon.com/dp/B0D66ZFGKB) |
+| **Beelink EQ13** (Intel N100, 16 GB, 500 GB) — **recommended** | Frigate's own docs call it their favorite. It has **two Ethernet ports**, so the camera gets its own private network with no internet access. | ~$299 (stock comes and goes) | [Amazon](https://www.amazon.com/dp/B0D66ZFGKB) |
 | GMKtec G3 Plus (Intel N150, 8 GB, 256 GB) — budget | Cheapest box that works. It has one Ethernet port and less RAM. Fine for the Starter tier. | $139 | [Amazon](https://www.amazon.com/dp/B0DM58M5SD) |
-| **Beelink EQi12** (Core i5-1235U, 16 GB, 500 GB) — Pro | About 3× the CPU power. Handles lots of cameras and several 4K streams at once. | $439 | [Amazon](https://www.amazon.com/dp/B0B1B64NKD) |
+| **Beelink EQi12** (Core i5-1235U, 16 GB, 500 GB) — Pro | About 3× the CPU power. Handles several 4K streams at once. | $439 | [Amazon](https://www.amazon.com/dp/B0B1B64NKD) |
 
 > **Avoid the Beelink EQ14.** Frigate's [hardware page](https://docs.frigate.video/frigate/hardware) warns it has known compatibility issues. Also avoid AMD mini PCs for this build: Frigate's detection works best on Intel.
 
@@ -31,15 +34,15 @@ Get an **Intel** CPU. Intel's built-in graphics (Quick Sync) lets Jellyfin conve
 Two kinds of data go on the drives:
 
 - **Movies/TV** (Jellyfin): a 1080p movie is about 4–10 GB; a 4K movie is about 20–60 GB.
-- **Camera recordings** (Frigate): one 5 MP camera recording 24/7 uses roughly **40 GB per day**. Four cameras for 7 days is about 1.2 TB. Recording only when there's motion cuts that a lot.
+- **Camera recordings** (Frigate): one 5 MP camera recording 24/7 uses roughly **40 GB per day**. One camera for 7 days is about 280 GB. Recording only when there's motion cuts that a lot.
 
 | Item | Use | Price | Link |
 | --- | --- | --- | --- |
 | **WD Elements 20 TB** USB desktop drive | Simplest: one plug-in drive holds both media and recordings. Best price per TB right now (the 12 TB costs the same). | ~$550 | [Amazon search](https://www.amazon.com/s?k=WD+Elements+20TB+desktop) |
 | **TerraMaster D4-320** 4-bay USB-C enclosure | Holds up to 4 bare drives over one USB-C cable (no RAID, every drive shows up separately). | $152 | [B&H](https://www.bhphotovideo.com/c/product/1834179-REG/terramaster_d4_320_4_bay_usb_3_2_gen2.html) · [Amazon](https://www.amazon.com/dp/B0CTTL9R7Z) |
 | **Toshiba MG08 16 TB** (refurbished, 2-yr warranty) | Media drive for the enclosure. Datacenter drives tested and resold by ServerPartDeals. Best $/TB. | $399 | [ServerPartDeals](https://serverpartdeals.com/collections/16tb-enterprise-sata-hard-drives) |
-| **Seagate SkyHawk 4 TB** (surveillance drive) | Camera recordings. Built for non-stop writing. About 3 weeks of 24/7 recording for 4 cameras. | $160 | [Amazon](https://www.amazon.com/dp/B0B1JPYH2Z) |
-| **WD Purple 8 TB** (surveillance drive) | Pro tier: about 6 weeks of 24/7 recording for 4 cameras. | $375 | [Micro Center](https://www.microcenter.com/product/677532/wd-purple-8tb-5640-rpm-sata-iii-6gb-s-35-surveillance-internal-cmr-hard-drive) |
+| **Seagate SkyHawk 4 TB** (surveillance drive) | Camera recordings. Built for non-stop writing. About 3 months of 24/7 recording for one camera. Also the drive for the UDM Pro bay in the UniFi build. | $160 | [Amazon](https://www.amazon.com/dp/B0B1JPYH2Z) |
+| **WD Purple 8 TB** (surveillance drive) | More history: about 6 months of 24/7 recording for one camera. | $375 | [Micro Center](https://www.microcenter.com/product/677532/wd-purple-8tb-5640-rpm-sata-iii-6gb-s-35-surveillance-internal-cmr-hard-drive) |
 
 Keep recordings and movies on **separate drives** when you can, so 24/7 recording never slows down movie playback.
 
@@ -47,13 +50,13 @@ Keep recordings and movies on **separate drives** when you can, so 24/7 recordin
 
 ## 3. Cameras
 
-Buy **wired PoE cameras**: one Ethernet cable carries both power and video. Skip Wi-Fi cameras, which drop out. Skip cloud-only cameras like Ring, Nest, Blink, Arlo and most Wyze, because they can't stream to Frigate.
+Buy one **wired PoE camera**: one Ethernet cable carries both power and video. Skip Wi-Fi cameras, which drop out. Skip cloud-only cameras like Ring, Nest, Blink, Arlo and most Wyze, because they can't stream to Frigate.
 
 | Camera | Notes | Price | Link |
 | --- | --- | --- | --- |
 | **Reolink RLC-520A** (5 MP dome) | Cheap and reliable. Domes are harder to knock out of position. | $59.49 | [Amazon](https://www.amazon.com/dp/B08LKC9BJ8) |
 | **Reolink RLC-510A** (5 MP bullet) | Same camera in a bullet shape. Good for driveways. | $59.49 | [Amazon](https://www.amazon.com/dp/B08F568BH1) |
-| **Reolink Video Doorbell PoE** (5 MP) | Doorbell with chime. Works with Frigate over RTSP. | $90–120 | [Amazon](https://www.amazon.com/dp/B0CN8TG9ZR) · [Newegg ($95.99)](https://www.newegg.com/reolink-video-doorbell-poe-pushbutton/p/0GD-0140-00002) |
+| **UniFi G5 Bullet** (2K / 4 MP) — UniFi | For UDM Pro owners: recorded by UniFi Protect, and Frigate can watch the same stream. See the [UniFi guide](UNIFI.md). | $129–148 | [UI Store](https://store.ui.com/us/en/products/uvc-g5-bullet) |
 | **EmpireTech IPC-T54IR-AS** (4 MP Dahua turret) — Pro | Frigate's top recommendation: big sensor, much better at night. | ~$220 | [EmpireTech](https://empiretech01.com/products/empiretech-ipc-t54ir-as-1-1-8-cmos-4mp-ir-fixed-focal-eyeball-network-camera) · [Amazon](https://www.amazon.com/dp/B07S2196R9) |
 
 > Frigate's docs report problems with Reolink's **4K** models (like the RLC-810A). Stick to 5 MP or lower for Reolink.
@@ -62,13 +65,12 @@ Buy **wired PoE cameras**: one Ethernet cable carries both power and video. Skip
 
 | Item | Notes | Price | Link |
 | --- | --- | --- | --- |
-| **TP-Link TL-SG1005P** (5-port, 4 PoE) | Powers up to 4 cameras. Plug and play. | $44.99 | [Amazon](https://www.amazon.com/dp/B076HZFY3F) |
-| **TP-Link TL-SG1210P** (10-port, 8 PoE) | For 5–8 cameras. | $84.99 | [Amazon](https://www.amazon.com/dp/B084JFPDT4) |
-| **Outdoor Cat6, 100 ft** (UV-resistant, direct burial) | One per camera. Get a shorter cable when the run is shorter. | $53.98 | [Amazon](https://www.amazon.com/dp/B0873WMNPG) |
+| **TP-Link TL-PoE150S** PoE injector | Powers the camera over its Ethernet cable. Plug and play. Skip it if you already have a PoE switch. | $15.99 | [Amazon](https://www.amazon.com/dp/B001PS9E5I) |
+| **Outdoor Cat6, 100 ft** (UV-resistant, direct burial) | Runs to the camera. Get a shorter cable when the run is shorter. | $53.98 | [Amazon](https://www.amazon.com/dp/B0873WMNPG) |
 
-**Wiring:** cameras → PoE switch → the mini PC's **second** Ethernet port (EQ13). The mini PC's first port goes to your router. Your cameras can then talk to Frigate but never reach the internet. If you only have one port, plug the switch into the router and block the cameras' internet access in your router settings.
+**Wiring:** camera → PoE injector (or PoE switch) → the mini PC's **second** Ethernet port (EQ13). The mini PC's first port goes to your router. The camera can then talk to Frigate but never reach the internet. If you only have one port, plug the injector into the router and block the camera's internet access in your router settings.
 
-**Have a UniFi Dream Machine Pro?** It has no PoE ports, so you still need one of the PoE switches above. You can plug it into a UDM Pro port that's set to a camera VLAN, or buy a UniFi PoE switch instead. The UDM Pro also makes the second Ethernet port unnecessary and gives you a built-in VPN. See the [UniFi guide](UNIFI.md).
+**Have a UniFi Dream Machine Pro?** It has no PoE ports, so you still need the injector above or a PoE switch you already own. Plug it into a UDM Pro port that's set to a camera VLAN. The UDM Pro also makes the second Ethernet port unnecessary and gives you a built-in VPN. See the [UniFi guide](UNIFI.md).
 
 ## 5. Power and TV
 
@@ -85,7 +87,7 @@ A UniFi Dream Machine Pro is a full-width 19" rack device (1U, 11.2" deep), so i
 | Item | Notes | Price | Link |
 | --- | --- | --- | --- |
 | **NavePoint 6U wall-mount rack** (18" deep) | Open frame with a swing-out front, mounts on two wall studs (or sits on a shelf). Cage nuts and screws included. | $157.99 | [Amazon](https://www.amazon.com/dp/B0714JBWMF) |
-| **Raising Electronics 1U vented shelf** (12" deep), ×2 | One for the mini PC and USB drive or enclosure, one for the PoE switch. | $23.99 each | [Amazon](https://www.amazon.com/dp/B01M8HKRA7) |
+| **Raising Electronics 1U vented shelf** (12" deep), ×2 | One for the mini PC and USB drive or enclosure, one for the PoE injector or switch. | $23.99 each | [Amazon](https://www.amazon.com/dp/B01M8HKRA7) |
 | **VEVOR 1U power strip** (10 outlets, surge protected) | Plug it into the UPS so everything in the rack is on battery. | $44.90 | [VEVOR](https://www.vevor.com/power-strips-c_13422/vevor-19-1u-pdu-10-outlets-rack-mount-power-strip-surge-overload-protection-p_010862059691) |
 | **Total** | | **~$251** | |
 
@@ -94,7 +96,7 @@ Suggested layout, top to bottom:
 | U | Item |
 | --- | --- |
 | 1 | UDM Pro |
-| 2 | Shelf: PoE switch |
+| 2 | Shelf: PoE injector or switch |
 | 3 | (empty, for cable slack or a patch panel later) |
 | 4 | Shelf: mini PC and drive |
 | 5 | (leave empty above the mini PC for airflow) |
@@ -106,46 +108,61 @@ The APC UPS isn't rack-mount; set it on the floor under the rack.
 
 ## Full shopping lists
 
-### Starter (~$1,045)
+### Starter (~$902)
 | Item | Qty | Cost |
 | --- | --- | --- |
 | GMKtec G3 Plus | 1 | $139 |
 | WD Elements 20 TB | 1 | $550 |
-| Reolink RLC-520A | 2 | $119 |
-| TP-Link TL-SG1005P | 1 | $45 |
-| Outdoor Cat6 100 ft | 2 | $108 |
+| Reolink RLC-520A | 1 | $59 |
+| TP-Link TL-PoE150S injector | 1 | $16 |
+| Outdoor Cat6 100 ft | 1 | $54 |
 | APC BE600M1 | 1 | $84 |
-| **Total** | | **~$1,045** |
+| **Total** | | **~$902** |
 
-### Recommended (~$1,700)
+### Recommended (~$1,293)
 | Item | Qty | Cost |
 | --- | --- | --- |
 | Beelink EQ13 | 1 | $299 |
 | TerraMaster D4-320 | 1 | $152 |
 | Toshiba MG08 16 TB (refurb) | 1 | $399 |
 | Seagate SkyHawk 4 TB | 1 | $160 |
-| Reolink RLC-520A / 510A | 3 | $178 |
-| Reolink Video Doorbell PoE | 1 | $96 |
-| TP-Link TL-SG1005P | 1 | $45 |
-| Outdoor Cat6 100 ft | 4 | $216 |
+| Reolink RLC-520A or 510A | 1 | $59 |
+| TP-Link TL-PoE150S injector | 1 | $16 |
+| Outdoor Cat6 100 ft | 1 | $54 |
 | APC BE600M1 | 1 | $84 |
 | onn 4K Pro | 1 | $70 |
-| **Total** | | **~$1,700** |
+| **Total** | | **~$1,293** |
 
-### Pro (~$3,850)
+### UniFi build (with a UDM Pro you already own)
+About **$1,600–1,625**, not counting the UDM Pro. UniFi Protect records the camera 24/7 to the drive in the UDM Pro bay. Frigate on the mini PC watches the same stream for person/car/animal detection (setup in the [UniFi guide](UNIFI.md#4a-frigate-and-unifi-protect-together)).
+
+| Item | Qty | Cost |
+| --- | --- | --- |
+| Beelink EQ13 | 1 | $299 |
+| TerraMaster D4-320 | 1 | $152 |
+| Toshiba MG08 16 TB (refurb), for media | 1 | $399 |
+| UniFi G5 Bullet | 1 | $129–148 |
+| Seagate SkyHawk 4 TB, in the UDM Pro bay | 1 | $160 |
+| PoE: your TP-Link PoE switch, or a UniFi U-POE-af injector | 1 | $0–8 |
+| Outdoor Cat6 100 ft | 1 | $54 |
+| 6U rack + 2 shelves + power strip ([section 6](#6-rack-optional)) | 1 | $251 |
+| APC BE600M1 | 1 | $84 |
+| onn 4K Pro | 1 | $70 |
+| **Total** | | **~$1,600–1,625** |
+
+### Pro (~$1,993)
 | Item | Qty | Cost |
 | --- | --- | --- |
 | Beelink EQi12 (i5) | 1 | $439 |
 | TerraMaster D4-320 | 1 | $152 |
 | Toshiba MG08 16 TB (refurb) | 2 | $798 |
-| WD Purple 8 TB | 1 | $375 |
-| EmpireTech IPC-T54IR-AS | 6 | $1,320 |
-| Reolink Video Doorbell PoE | 1 | $96 |
-| TP-Link TL-SG1210P | 1 | $85 |
-| Outdoor Cat6 100 ft | 8 | $432 |
+| Seagate SkyHawk 4 TB | 1 | $160 |
+| EmpireTech IPC-T54IR-AS | 1 | $220 |
+| TP-Link TL-PoE150S injector | 1 | $16 |
+| Outdoor Cat6 100 ft | 1 | $54 |
 | APC BE600M1 | 1 | $84 |
 | onn 4K Pro | 1 | $70 |
-| **Total** | | **~$3,850** |
+| **Total** | | **~$1,993** |
 
 ---
 

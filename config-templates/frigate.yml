@@ -48,6 +48,9 @@ snapshots:
 #   "ffmpeg:http://192.168.1.50/flv?port=1935&app=bcs&stream=channel0_main.bcs&user=admin&password=CAMERA_PASSWORD#video=copy#audio=copy"
 # instead of RTSP when recommended by the linked camera guide. The RTSP URLs below
 # are included as a general fallback and to show main/sub stream setup.
+# UniFi Protect camera (see UNIFI.md): copy its RTSPS link from Protect, change rtsps to
+# rtspx, drop ?enableSrtp, e.g. - rtspx://192.168.1.1:7441/abcdefghijk
+# and add  ffmpeg: { output_args: { record: preset-record-ubiquiti } }  under the camera.
 go2rtc:
   streams:
     front_door:

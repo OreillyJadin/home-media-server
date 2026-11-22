@@ -191,7 +191,7 @@ if [[ ! -f .env ]]; then
     printf 'RECORDINGS_DIR=%s\n' "${RECORDINGS_DIR}"
     printf 'RENDER_GID=%s\n' "${RENDER_GID}"
     printf 'COMPOSE_FILE=%s\n' "${COMPOSE_FILE}"
-    printf '# Camera RTSP password; replace this with the camera password before adding cameras.\n'
+    printf '# Camera RTSP password; replace this with the camera password before adding the camera.\n'
     printf "FRIGATE_RTSP_PASSWORD='%s'\n" "${FRIGATE_RTSP_PASSWORD}"
     printf 'FRIGATE_SHM=%s\n' "${FRIGATE_SHM}"
     printf 'HOMEPAGE_ALLOWED_HOSTS=%s:3000,localhost:3000\n' "${LAN_IP}"

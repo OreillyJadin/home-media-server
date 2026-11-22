@@ -104,8 +104,8 @@ Install the Tailscale app on your phone with the same account, then open `http:/
 ## Security and networking
 
 - Change default camera passwords, and use a unique password for each camera.
-- Put cameras on an isolated network/VLAN and block their internet access in your router where possible ([UniFi steps](UNIFI.md#2-put-the-cameras-on-their-own-network-vlan)).
-- **Dual-NIC tip:** with a dual-Ethernet mini PC such as the Beelink EQ13, connect the second Ethernet port to a camera-only network or PoE switch. This can keep cameras from reaching the internet.
+- Put the camera on an isolated network/VLAN and block its internet access in your router where possible ([UniFi steps](UNIFI.md#2-put-the-camera-on-its-own-network-vlan)).
+- **Dual-NIC tip:** with a dual-Ethernet mini PC such as the Beelink EQ13, connect the second Ethernet port to the camera's PoE injector or switch. This keeps the camera from reaching the internet.
 - Port 8554 (raw RTSP restreams) is not published because it has no login. Only add it if another app such as Home Assistant needs it, and add RTSP credentials in go2rtc first.
 - Do not forward Jellyfin or Frigate ports directly to the public internet.
 - Frigate's example camera is disabled until you configure it. Replace the sample credentials and addresses before enabling it.
