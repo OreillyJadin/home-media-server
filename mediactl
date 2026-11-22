@@ -45,6 +45,12 @@ stop_disabled_profile_services() {
   fi
 }
 
+warn_calibre_password_missing() {
+  if profile_enabled books && ! grep -q '^CALIBRE_ADMIN_PASSWORD=' .env; then
+    printf 'WARNING: Calibre-Web may use admin/admin123. Rerun with: sudo "%s/install.sh", or change admin/admin123 immediately.\n' "${APP_DIR}" >&2
+  fi
+}
+
 case "${1:-}" in
   status)
     docker compose ps
@@ -70,6 +76,7 @@ case "${1:-}" in
     stop_disabled_profile_services
     docker compose pull
     docker compose up -d
+    warn_calibre_password_missing
     docker image prune -f
     ;;
   stop)
@@ -79,6 +86,7 @@ case "${1:-}" in
   start)
     stop_disabled_profile_services
     docker compose up -d
+    warn_calibre_password_missing
     ;;
   password)
     PASSWORD_LINE="$(docker logs frigate 2>&1 | grep -Ei 'Password:' | tail -n 1 || true)"

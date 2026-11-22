@@ -306,12 +306,16 @@ chown -R "${PUID}:${PGID}" config cache
 
 ACTIVE_PROFILES="$(read_env_setting COMPOSE_PROFILES)"
 unset COMPOSE_PROFILES IMMICH_UPLOAD_DIR IMMICH_DB_PASSWORD
+CALIBRE_DB_EXISTED=0
+if [[ -f config/calibre-web/app.db ]]; then
+  CALIBRE_DB_EXISTED=1
+fi
 docker compose pull
 docker compose up -d
 
 CALIBRE_ADMIN_PASSWORD="$(read_env_setting CALIBRE_ADMIN_PASSWORD)"
 if [[ ",${ACTIVE_PROFILES//[[:space:]]/}," == *",books,"* ]] &&
-  ! grep -q '^CALIBRE_ADMIN_PASSWORD=' .env; then
+  { ! grep -q '^CALIBRE_ADMIN_PASSWORD=' .env || [[ "${CALIBRE_DB_EXISTED}" == 0 ]]; }; then
   CALIBRE_ADMIN_PASSWORD="$(openssl rand -hex 12)"
   CALIBRE_ADMIN_PASSWORD+="1aA!"
   printf 'Waiting for Calibre-Web to create its database'
@@ -326,7 +330,13 @@ if [[ ",${ACTIVE_PROFILES//[[:space:]]/}," == *",books,"* ]] &&
   if [[ -f config/calibre-web/app.db ]] &&
     docker exec --user abc calibre-web /lsiopy/bin/python3 /app/calibre-web/cps.py \
       -p /config/app.db -o /config/calibre-web.log -s "admin:${CALIBRE_ADMIN_PASSWORD}"; then
-    append_env_setting CALIBRE_ADMIN_PASSWORD "${CALIBRE_ADMIN_PASSWORD}"
+    CALIBRE_ENV_UID="$(stat -c '%u' .env)"
+    CALIBRE_ENV_GID="$(stat -c '%g' .env)"
+    CALIBRE_ENV_MODE="$(stat -c '%a' .env)"
+    sed -i '/^CALIBRE_ADMIN_PASSWORD=/d' .env
+    printf 'CALIBRE_ADMIN_PASSWORD=%s\n' "${CALIBRE_ADMIN_PASSWORD}" >>.env
+    chown "${CALIBRE_ENV_UID}:${CALIBRE_ENV_GID}" .env
+    chmod "${CALIBRE_ENV_MODE}" .env
   else
     CALIBRE_ADMIN_PASSWORD=""
     printf 'WARNING: Calibre-Web automatic password setup failed. Change the default admin/admin123 password now.\n' >&2
