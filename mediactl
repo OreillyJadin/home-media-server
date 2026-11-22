@@ -12,6 +12,23 @@ usage() {
   printf 'Usage: mediactl {status|logs [service]|restart [service]|update|stop|start|password|uninstall [--purge]}\n'
 }
 
+read_env_setting() {
+  local name="$1"
+  local value
+  local first
+  local last
+  value="$(sed -n "s/^${name}=//p" .env | head -n 1)"
+  if (( ${#value} >= 2 )); then
+    first="${value:0:1}"
+    last="${value:${#value}-1:1}"
+    if [[ ( "${first}" == "'" && "${last}" == "'" ) ||
+      ( "${first}" == '"' && "${last}" == '"' ) ]]; then
+      value="${value:1:${#value}-2}"
+    fi
+  fi
+  printf '%s' "${value}"
+}
+
 case "${1:-}" in
   status)
     docker compose ps
@@ -62,8 +79,8 @@ case "${1:-}" in
         printf 'Purge cancelled. Containers were stopped; data was kept.\n'
         exit 0
       fi
-      media_dir="$(sed -n 's/^MEDIA_DIR=//p' .env | head -n 1)"
-      recordings_dir="$(sed -n 's/^RECORDINGS_DIR=//p' .env | head -n 1)"
+      media_dir="$(read_env_setting MEDIA_DIR)"
+      recordings_dir="$(read_env_setting RECORDINGS_DIR)"
       if [[ -n "${media_dir}" && "${media_dir}" != / && -n "${recordings_dir}" && "${recordings_dir}" != / ]]; then
         rm -rf -- "${media_dir}" "${recordings_dir}"
       else

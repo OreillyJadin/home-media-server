@@ -110,7 +110,19 @@ prompt_value() {
 
 read_env_setting() {
   local name="$1"
-  sed -n "s/^${name}=//p" .env | head -n 1
+  local value
+  local first
+  local last
+  value="$(sed -n "s/^${name}=//p" .env | head -n 1)"
+  if (( ${#value} >= 2 )); then
+    first="${value:0:1}"
+    last="${value:${#value}-1:1}"
+    if [[ ( "${first}" == "'" && "${last}" == "'" ) ||
+      ( "${first}" == '"' && "${last}" == '"' ) ]]; then
+      value="${value:1:${#value}-2}"
+    fi
+  fi
+  printf '%s' "${value}"
 }
 
 if [[ -f .env ]]; then
@@ -158,6 +170,10 @@ else
 fi
 
 if [[ ! -f .env ]]; then
+  if [[ "${FRIGATE_RTSP_PASSWORD}" == *"'"* ]]; then
+    printf 'FRIGATE_RTSP_PASSWORD must not contain a single quote.\n' >&2
+    exit 1
+  fi
   {
     printf 'TZ=%s\n' "${TZ}"
     printf 'PUID=%s\n' "${PUID}"
@@ -167,7 +183,7 @@ if [[ ! -f .env ]]; then
     printf 'RENDER_GID=%s\n' "${RENDER_GID}"
     printf 'COMPOSE_FILE=%s\n' "${COMPOSE_FILE}"
     printf '# Camera RTSP password; replace this with the camera password before adding cameras.\n'
-    printf 'FRIGATE_RTSP_PASSWORD=%s\n' "${FRIGATE_RTSP_PASSWORD}"
+    printf "FRIGATE_RTSP_PASSWORD='%s'\n" "${FRIGATE_RTSP_PASSWORD}"
     printf 'FRIGATE_SHM=%s\n' "${FRIGATE_SHM}"
   } >.env
   chmod 600 .env

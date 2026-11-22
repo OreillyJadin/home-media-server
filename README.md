@@ -66,7 +66,7 @@ The Intel graphics device (`/dev/dri`) is optional. The installer enables the GP
    mediactl restart frigate
    ```
 
-   Put the camera password in `/opt/home-media-server/.env` as `FRIGATE_RTSP_PASSWORD` so the `{FRIGATE_RTSP_PASSWORD}` placeholder in the config fills in automatically. After changing `.env`, run `mediactl start` to apply it (a plain restart does not reload `.env`).
+   Put the camera password in `/opt/home-media-server/.env` as `FRIGATE_RTSP_PASSWORD` so the `{FRIGATE_RTSP_PASSWORD}` placeholder in the config fills in automatically. Keep the value in single quotes, e.g. `FRIGATE_RTSP_PASSWORD='my$ecret'`. After changing `.env`, run `mediactl start` to apply it (a plain restart does not reload `.env`).
 
    Example RTSP addresses:
 
