@@ -32,6 +32,15 @@ if ! command -v docker >/dev/null 2>&1; then
   curl -fsSL https://get.docker.com | sh
 fi
 systemctl enable --now docker
+if ! docker compose version >/dev/null 2>&1; then
+  if ! apt-get install -y docker-compose-plugin; then
+    apt-get install -y docker-compose-v2 || true
+  fi
+fi
+if ! docker compose version >/dev/null 2>&1; then
+  printf 'Docker Compose v2 is required (docker compose). Install it and rerun.\n' >&2
+  exit 1
+fi
 
 SCRIPT_DIR=""
 SCRIPT_PATH="${BASH_SOURCE[0]:-}"
