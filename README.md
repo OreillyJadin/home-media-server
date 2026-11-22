@@ -82,7 +82,7 @@ The Intel graphics device (`/dev/dri`) is optional. The installer enables the GP
 
 ## Dashboard
 
-Open `http://SERVER-IP:3000` for the dashboard. Its Jellyfin, Frigate, and router tiles include live status dots.
+Open `http://SERVER-IP:3000` for the dashboard. The Jellyfin and Frigate tiles show live status dots; the router tile links to your UniFi/router admin page.
 
 To enable the Jellyfin widget, create an API key in Jellyfin under **Dashboard → API Keys**, paste it into `config/homepage/services.yaml`, and run `mediactl restart homepage`.
 
