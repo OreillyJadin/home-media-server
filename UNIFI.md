@@ -62,3 +62,14 @@ Prices are from the official UniFi US store, checked Nov 21, 2026. The range is 
 | **UniFi G5 Bullet** (UVC-G5-Bullet) | 2K (4 MP) camera, for Protect | $129–148 | [UI Store](https://store.ui.com/us/en/products/uvc-g5-bullet) |
 | **UniFi G5 Turret Ultra** (UVC-G5-Turret-Ultra) | 2K (4 MP) compact turret, for Protect | $129–151 | [UI Store](https://store.ui.com/us/en/products/uvc-g5-turret-ultra) |
 | Drive for the UDM Pro bay | Only if you use Protect. A surveillance drive such as the Seagate SkyHawk 4 TB or WD Purple 8 TB from the [buying guide](BUYING_GUIDE.md#2-storage-hard-drives) | $160–375 | see buying guide |
+
+### Example: one camera recorded by Protect on the UDM Pro
+| Item | Price |
+| --- | --- |
+| UniFi G5 Bullet | $129–148 |
+| [Seagate SkyHawk 4 TB](https://www.amazon.com/dp/B0B1JPYH2Z) in the UDM Pro bay | $160 |
+| Power: a TP-Link PoE switch you already own, or a [TP-Link TL-PoE150S injector](https://www.amazon.com/dp/B001PS9E5I) | $0–16 |
+| [Outdoor Cat6, 100 ft](https://www.amazon.com/dp/B0873WMNPG) | $54 |
+| **Total** | **~$343–378** |
+
+The same single camera with a Reolink RLC-510A recorded by Frigate on the mini PC comes to about $113–129, because it doesn't need the UDM drive.

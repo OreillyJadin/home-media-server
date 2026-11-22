@@ -78,6 +78,30 @@ Buy **wired PoE cameras**: one Ethernet cable carries both power and video. Skip
 | **onn 4K Pro** (Google TV) | Cheap 4K streaming box with the official Jellyfin app. Fire TV, Roku, Apple TV and smart TVs also have Jellyfin apps. | $69.98 | [Walmart](https://www.walmart.com/ip/4K-PRO-STREAMING/18382213962) |
 | **HDHomeRun Flex Duo** (optional) | Free over-the-air TV from an antenna, shown inside Jellyfin as Live TV with a DVR. | $109.99 | [Amazon](https://www.amazon.com/dp/B092KM482V) |
 
+## 6. Rack (optional)
+
+A UniFi Dream Machine Pro is a full-width 19" rack device (1U, 11.2" deep), so it needs a standard 19" rack. The small 10" "mini racks" are too narrow for it. A 6U wall-mount rack holds everything here and is about 16" tall:
+
+| Item | Notes | Price | Link |
+| --- | --- | --- | --- |
+| **NavePoint 6U wall-mount rack** (18" deep) | Open frame with a swing-out front, mounts on two wall studs (or sits on a shelf). Cage nuts and screws included. | $157.99 | [Amazon](https://www.amazon.com/dp/B0714JBWMF) |
+| **Raising Electronics 1U vented shelf** (12" deep), ×2 | One for the mini PC and USB drive or enclosure, one for the PoE switch. | $23.99 each | [Amazon](https://www.amazon.com/dp/B01M8HKRA7) |
+| **VEVOR 1U power strip** (10 outlets, surge protected) | Plug it into the UPS so everything in the rack is on battery. | $44.90 | [VEVOR](https://www.vevor.com/power-strips-c_13422/vevor-19-1u-pdu-10-outlets-rack-mount-power-strip-surge-overload-protection-p_010862059691) |
+| **Total** | | **~$251** | |
+
+Suggested layout, top to bottom:
+
+| U | Item |
+| --- | --- |
+| 1 | UDM Pro |
+| 2 | Shelf: PoE switch |
+| 3 | (empty, for cable slack or a patch panel later) |
+| 4 | Shelf: mini PC and drive |
+| 5 | (leave empty above the mini PC for airflow) |
+| 6 | Power strip |
+
+The APC UPS isn't rack-mount; set it on the floor under the rack.
+
 ---
 
 ## Full shopping lists
