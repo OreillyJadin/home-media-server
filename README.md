@@ -2,20 +2,48 @@
 
 A simple Docker setup for a home media library with Jellyfin and Frigate. It is designed for Ubuntu Server 24.04 on a small Intel mini PC. You do not need to know Docker to get started.
 
+- **What to buy (with prices):** [BUYING_GUIDE.md](BUYING_GUIDE.md)
+- **Getting movies onto it (legal sources):** [MEDIA_GUIDE.md](MEDIA_GUIDE.md)
+
 ## Install
 
-On your Ubuntu Server, run:
+1. Install Ubuntu Server 24.04 on the mini PC ([steps](BUYING_GUIDE.md#installing-ubuntu-one-time)).
+2. If you use an external drive, set it up first ([Using an external drive](#using-an-external-drive)).
+3. Log in to the server and run:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/OreillyJadin/home-media-server/main/install.sh | sudo bash
 ```
 
-The installer asks where to store media and recordings, installs Docker if needed, downloads the services, and prints the addresses and Frigate's first-time admin password. To use the defaults without prompts, set `NONINTERACTIVE=1` and any desired variables before running the installer.
+The installer asks where to store media and recordings, installs Docker if needed, downloads the services, and prints the addresses and Frigate's first-time admin password. Press Enter to accept each default.
+
+To skip the prompts, pass settings as variables:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/OreillyJadin/home-media-server/main/install.sh \
+  | sudo NONINTERACTIVE=1 MEDIA_DIR=/mnt/storage/media RECORDINGS_DIR=/mnt/storage/recordings bash
+```
+
+Running the installer again is safe: it keeps your existing `.env` and Frigate `config.yml`.
+
+## Using an external drive
+
+Do this **before** running the installer. Formatting erases the drive.
+
+```bash
+lsblk                                   # find the drive, e.g. /dev/sdb (check the size!)
+sudo mkfs.ext4 -L storage /dev/sdb      # ERASES /dev/sdb
+sudo mkdir -p /mnt/storage
+echo 'LABEL=storage /mnt/storage ext4 defaults,nofail 0 2' | sudo tee -a /etc/fstab
+sudo mount -a && df -h /mnt/storage
+```
+
+Then install with `MEDIA_DIR=/mnt/storage/media` and `RECORDINGS_DIR=/mnt/storage/recordings` (type them at the prompts, or pass them as shown above). With two drives, mount each one (e.g. `/mnt/media` and `/mnt/recordings`) and point each setting at its own drive.
 
 ## What you need
 
 - Ubuntu Server 24.04 (or a Debian-based system with `apt`)
-- An Intel N100/N150-class mini PC with at least 8 GB RAM and enough storage for your media and camera recordings
+- An Intel N100/N150-class mini PC with at least 8 GB RAM and enough storage for your media and camera recordings (see the [buying guide](BUYING_GUIDE.md))
 - A wired network connection
 - A camera that provides an RTSP or supported HTTP stream, if you want to use Frigate
 
@@ -34,8 +62,11 @@ The Intel graphics device (`/dev/dri`) is optional. The installer enables the GP
 4. Add a camera by editing `/opt/home-media-server/config/frigate/config.yml`. Set the camera to `enabled: true`, replace the example address and RTSP password with your camera's details, then run:
 
    ```bash
+   sudo nano /opt/home-media-server/config/frigate/config.yml
    mediactl restart frigate
    ```
+
+   Put the camera password in `/opt/home-media-server/.env` as `FRIGATE_RTSP_PASSWORD` so the `{FRIGATE_RTSP_PASSWORD}` placeholder in the config fills in automatically. After changing `.env`, run `mediactl start` to apply it (a plain restart does not reload `.env`).
 
    Example RTSP addresses:
 
@@ -50,7 +81,14 @@ The Intel graphics device (`/dev/dri`) is optional. The installer enables the GP
 
 ## Remote access
 
-For remote access, use [Tailscale](https://tailscale.com/) rather than opening ports on your router. During installation, Tailscale is optional and defaults to No. You can install it later from its official instructions and connect your devices to the same private network.
+For remote access, use [Tailscale](https://tailscale.com/) rather than opening ports on your router. The installer offers to install it (default: No). To add it later:
+
+```bash
+curl -fsSL https://tailscale.com/install.sh | sh
+sudo tailscale up
+```
+
+Install the Tailscale app on your phone with the same account, then open `http://SERVER-TAILSCALE-IP:8096` (Jellyfin) or `https://SERVER-TAILSCALE-IP:8971` (Frigate) from anywhere. `tailscale ip -4` on the server shows that address.
 
 ## Security and networking
 
@@ -80,6 +118,8 @@ Media is stored in `/srv/media` and Frigate recordings in `/srv/recordings` by d
 
 ## `mediactl` commands
 
+`mediactl` asks for your password (sudo) when needed.
+
 ```text
 mediactl status             Show service status
 mediactl logs [service]     Follow logs (for example: mediactl logs frigate)
@@ -101,7 +141,7 @@ mediactl uninstall --purge  Also delete media and recordings after confirmation
 
 ## More information
 
-- [Buying guide](BUYING_GUIDE.md) (coming soon)
-- [Media guide](MEDIA_GUIDE.md) — getting content (coming soon)
+- [Buying guide](BUYING_GUIDE.md): hardware with prices
+- [Media guide](MEDIA_GUIDE.md): getting content legally and naming files
 - [Frigate documentation](https://docs.frigate.video/)
 - [Jellyfin documentation](https://jellyfin.org/docs/)
