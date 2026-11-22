@@ -1,0 +1,36 @@
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    user: "${PUID}:${PGID}"
+    ports:
+      - "8096:8096"
+      - "7359:7359/udp"
+    volumes:
+      - ./config/jellyfin:/config
+      - ./cache/jellyfin:/cache
+      - "${MEDIA_DIR}:/media"
+    environment:
+      TZ: "${TZ}"
+
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:0.18.3
+    container_name: frigate
+    restart: unless-stopped
+    privileged: false
+    shm_size: "${FRIGATE_SHM:-512mb}"
+    ports:
+      - "8971:8971"
+      - "8554:8554"
+      - "8555:8555/tcp"
+      - "8555:8555/udp"
+    volumes:
+      - ./config/frigate:/config
+      - "${RECORDINGS_DIR}:/media/frigate"
+      - /etc/localtime:/etc/localtime:ro
+    tmpfs:
+      - /tmp/cache:size=1g
+    environment:
+      FRIGATE_RTSP_PASSWORD: "${FRIGATE_RTSP_PASSWORD}"
+      TZ: "${TZ}"

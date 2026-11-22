@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ShellCheck
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
+      - name: Check shell scripts
+        run: shellcheck install.sh mediactl
+      - name: Validate base Compose configuration
+        run: |
+          cp .env.example .env
+          docker compose -f docker-compose.yml config --quiet
+      - name: Validate GPU Compose override
+        run: docker compose -f docker-compose.yml -f docker-compose.gpu.yml config --quiet

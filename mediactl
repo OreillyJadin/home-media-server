@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_DIR="$(cd -- "$(dirname -- "$(readlink -f -- "${BASH_SOURCE[0]}")")" && pwd)"
+cd "${APP_DIR}"
+
+usage() {
+  printf 'Usage: mediactl {status|logs [service]|restart [service]|update|stop|start|password|uninstall [--purge]}\n'
+}
+
+case "${1:-}" in
+  status)
+    docker compose ps
+    ;;
+  logs)
+    shift
+    if [[ "$#" -gt 0 ]]; then
+      docker compose logs -f --tail=100 "$@"
+    else
+      docker compose logs -f --tail=100
+    fi
+    ;;
+  restart)
+    shift
+    if [[ "$#" -gt 0 ]]; then
+      docker compose restart "$@"
+    else
+      docker compose restart
+    fi
+    ;;
+  update)
+    git pull --ff-only
+    docker compose pull
+    docker compose up -d
+    docker image prune -f
+    ;;
+  stop)
+    docker compose stop
+    ;;
+  start)
+    docker compose up -d
+    ;;
+  password)
+    PASSWORD_LINE="$(docker logs frigate 2>&1 | grep -Ei 'Password:' | tail -n 1 || true)"
+    if [[ -n "${PASSWORD_LINE}" ]]; then
+      printf '%s\n' "${PASSWORD_LINE}"
+    else
+      printf 'No first-boot password is present in the logs. Check "mediactl logs frigate"; reset the admin password using Frigate documentation if needed.\n'
+    fi
+    ;;
+  uninstall)
+    shift
+    docker compose down
+    if [[ "${1:-}" == --purge ]]; then
+      printf 'This permanently deletes the configured media and recordings directories. Type DELETE to continue: '
+      IFS= read -r confirmation
+      if [[ "${confirmation}" != DELETE ]]; then
+        printf 'Purge cancelled. Containers were stopped; data was kept.\n'
+        exit 0
+      fi
+      media_dir="$(sed -n 's/^MEDIA_DIR=//p' .env | head -n 1)"
+      recordings_dir="$(sed -n 's/^RECORDINGS_DIR=//p' .env | head -n 1)"
+      if [[ -n "${media_dir}" && "${media_dir}" != / && -n "${recordings_dir}" && "${recordings_dir}" != / ]]; then
+        rm -rf -- "${media_dir}" "${recordings_dir}"
+      else
+        printf 'Refusing to purge: media or recordings directory is empty or root.\n' >&2
+        exit 1
+      fi
+      rm -rf -- "${APP_DIR}/config" "${APP_DIR}/cache"
+    else
+      printf 'Media and recordings were kept. Use "mediactl uninstall --purge" to delete data after a confirmation prompt.\n'
+    fi
+    rm -f /usr/local/bin/mediactl
+    ;;
+  -h|--help|"")
+    usage
+    ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac
