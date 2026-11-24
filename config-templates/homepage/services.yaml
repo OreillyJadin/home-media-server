@@ -28,6 +28,12 @@
         href: http://__LAN_IP__:8083
         description: E-books → Kindle
         siteMonitor: http://calibre-web:8083
+- Money:
+    - Sure:
+        icon: sure.png
+        href: http://__LAN_IP__:3001
+        description: Personal finance
+        siteMonitor: http://sure-web:3000/up
 - Cameras:
     - Frigate:
         icon: frigate.png

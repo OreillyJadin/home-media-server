@@ -1,3 +1,16 @@
+x-sure-env: &sure_env
+  SECRET_KEY_BASE: "${SURE_SECRET_KEY_BASE}"
+  SELF_HOSTED: "true"
+  RAILS_FORCE_SSL: "false"
+  RAILS_ASSUME_SSL: "false"
+  DB_HOST: sure-db
+  DB_PORT: 5432
+  POSTGRES_USER: sure_user
+  POSTGRES_PASSWORD: "${SURE_DB_PASSWORD}"
+  POSTGRES_DB: sure_production
+  REDIS_URL: redis://sure-redis:6379/1
+  TZ: "${TZ}"
+
 services:
   jellyfin:
     image: jellyfin/jellyfin:latest
@@ -132,3 +145,62 @@ services:
     volumes:
       - ./config/calibre-web:/config
       - "${MEDIA_DIR}/books:/books"
+
+  sure-web:
+    profiles: ["finance"]
+    image: ghcr.io/we-promise/sure:0.7.6-hotfix.2
+    container_name: sure-web
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./db/sure-storage:/rails/storage
+    environment: *sure_env
+    depends_on:
+      sure-db:
+        condition: service_healthy
+      sure-redis:
+        condition: service_healthy
+
+  sure-worker:
+    profiles: ["finance"]
+    image: ghcr.io/we-promise/sure:0.7.6-hotfix.2
+    container_name: sure-worker
+    restart: unless-stopped
+    command: bundle exec sidekiq
+    volumes:
+      - ./db/sure-storage:/rails/storage
+    environment: *sure_env
+    depends_on:
+      sure-db:
+        condition: service_healthy
+      sure-redis:
+        condition: service_healthy
+
+  sure-db:
+    profiles: ["finance"]
+    image: postgres:16.10
+    container_name: sure-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sure_user
+      POSTGRES_PASSWORD: "${SURE_DB_PASSWORD}"
+      POSTGRES_DB: sure_production
+    volumes:
+      - ./db/sure:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sure_user -d sure_production"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  sure-redis:
+    profiles: ["finance"]
+    image: redis:7.4-alpine
+    container_name: sure-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

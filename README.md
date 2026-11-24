@@ -1,6 +1,6 @@
 # Home Media Server
 
-A simple Docker setup for a home media library with Jellyfin and Frigate, plus optional apps for photos, audiobooks and e-books. It is designed for Ubuntu Server 24.04 on a small Intel mini PC. You do not need to know Docker to get started.
+A simple Docker setup for a home media library with Jellyfin and Frigate, plus optional apps for photos, audiobooks, e-books and personal finance. It is designed for Ubuntu Server 24.04 on a small Intel mini PC. You do not need to know Docker to get started.
 
 - **What to buy (with prices):** [BUYING_GUIDE.md](BUYING_GUIDE.md)
 - **Getting movies onto it (legal sources):** [MEDIA_GUIDE.md](MEDIA_GUIDE.md)
@@ -26,7 +26,7 @@ curl -fsSL https://raw.githubusercontent.com/OreillyJadin/home-media-server/main
   | sudo NONINTERACTIVE=1 MEDIA_DIR=/mnt/storage/media RECORDINGS_DIR=/mnt/storage/recordings bash
 ```
 
-Running the installer again is safe: it keeps your existing `.env` and Frigate `config.yml`. Homepage templates are copied only when missing; to get new dashboard tiles on an existing install, delete `config/homepage/services.yaml` and `config/homepage/settings.yaml`, then rerun the installer.
+Running the installer again is safe: it keeps your existing `.env` and Frigate `config.yml`. Homepage templates are copied only when missing; to get new dashboard tiles on an existing install, delete `config/homepage/services.yaml` and `config/homepage/settings.yaml`, then rerun the installer. Existing installs keep their current `COMPOSE_PROFILES`; add `finance` to that list in `.env` and run `mediactl start` to enable Sure, or remove it and run `mediactl start` to disable Sure. To add its dashboard tile, refresh the Homepage templates as described above.
 
 ## Using an external drive
 
@@ -84,10 +84,11 @@ The Intel graphics device (`/dev/dri`) is optional. The installer enables the GP
 4. Open Immich at `http://SERVER-IP:2283` and create the administrator account on first visit.
 5. Open Audiobookshelf at `http://SERVER-IP:13378` to create its initial account.
 6. Open Calibre-Web at `http://SERVER-IP:8083` and sign in as `admin` with the password printed by the installer or shown by `mediactl password`. You can change it in your profile.
+7. Open Sure at `http://SERVER-IP:3001` and create your account; the first account becomes the administrator.
 
 ## Dashboard
 
-Open `http://SERVER-IP:3000` for the dashboard. Its tiles link to Jellyfin, Frigate, Immich, Audiobookshelf, Calibre-Web and your router; service tiles show live status dots.
+Open `http://SERVER-IP:3000` for the dashboard. Its tiles link to Jellyfin, Frigate, Immich, Audiobookshelf, Calibre-Web, Sure and your router; service tiles show live status dots.
 
 To enable the Jellyfin widget, create an API key in Jellyfin under **Dashboard → API Keys**, paste it into `config/homepage/services.yaml`, and run `mediactl restart homepage`.
 
@@ -119,6 +120,17 @@ Sign in as `admin` with the password printed by the installer or shown by `media
 
 To disable Audiobookshelf and Calibre-Web, remove `books` from `COMPOSE_PROFILES` in `.env` and run `mediactl start`.
 
+## Personal finance (Sure)
+
+1. Open `http://SERVER-IP:3001` and create your account. The first account becomes the administrator.
+2. After setup, go to **Settings → Self-Hosting → Onboarding** and set onboarding to **Closed** to prevent new signups. This setting is stored in Sure; `ONBOARDING_STATE` defaults to `open` if no setting is saved.
+3. Import transactions from CSV, Mint, YNAB, Monarch or a similar service.
+4. For optional bank syncing, connect SimpleFIN. It is a paid service at about $15 per year.
+5. Back up `.env` (especially `SURE_SECRET_KEY_BASE`) and `db/sure`. Sure needs the secret key to read encrypted credentials; losing it makes those credentials unreadable.
+6. For remote access, use Tailscale or the UDM VPN. Never forward Sure's port to the internet.
+
+To disable Sure, remove `finance` from `COMPOSE_PROFILES` in `.env` and run `mediactl start`.
+
 ## Remote access
 
 If you have a UniFi Dream Machine Pro, its built-in Teleport/WireGuard VPN does this without Tailscale ([UNIFI.md](UNIFI.md#3-remote-access-without-opening-ports)).
@@ -130,7 +142,7 @@ curl -fsSL https://tailscale.com/install.sh | sh
 sudo tailscale up
 ```
 
-Install the Tailscale app on your phone with the same account, then open `http://SERVER-TAILSCALE-IP:8096` (Jellyfin), `https://SERVER-TAILSCALE-IP:8971` (Frigate), `http://SERVER-TAILSCALE-IP:2283` (Immich), `http://SERVER-TAILSCALE-IP:13378` (Audiobookshelf), `http://SERVER-TAILSCALE-IP:8083` (Calibre-Web), or `http://SERVER-TAILSCALE-IP:3000` (dashboard) from anywhere. `tailscale ip -4` on the server shows that address.
+Install the Tailscale app on your phone with the same account, then open `http://SERVER-TAILSCALE-IP:8096` (Jellyfin), `https://SERVER-TAILSCALE-IP:8971` (Frigate), `http://SERVER-TAILSCALE-IP:2283` (Immich), `http://SERVER-TAILSCALE-IP:13378` (Audiobookshelf), `http://SERVER-TAILSCALE-IP:8083` (Calibre-Web), `http://SERVER-TAILSCALE-IP:3001` (Sure), or `http://SERVER-TAILSCALE-IP:3000` (dashboard) from anywhere. `tailscale ip -4` on the server shows that address.
 
 ## Security and networking
 
@@ -138,7 +150,7 @@ Install the Tailscale app on your phone with the same account, then open `http:/
 - Put the camera on an isolated network/VLAN and block its internet access in your router where possible ([UniFi steps](UNIFI.md#2-put-the-camera-on-its-own-network-vlan)).
 - **Dual-NIC tip:** with a dual-Ethernet mini PC such as the Beelink EQ13, connect the second Ethernet port to the camera's PoE injector or switch. This keeps the camera from reaching the internet.
 - Port 8554 (raw RTSP restreams) is not published because it has no login. Only add it if another app such as Home Assistant needs it, and add RTSP credentials in go2rtc first.
-- Do not forward Jellyfin or Frigate ports directly to the public internet.
+- Do not forward Jellyfin, Frigate or Sure ports directly to the public internet.
 - Frigate's example camera is disabled until you configure it. Replace the sample credentials and addresses before enabling it.
 - Jellyfin and Frigate are available to devices on your local network; secure your server and network accordingly.
 
@@ -155,13 +167,15 @@ Install the Tailscale app on your phone with the same account, then open `http:/
 │   ├── frigate/config.yml       # Frigate settings and camera setup
 │   └── jellyfin/                # Jellyfin settings
 ├── db/immich/                   # Immich database; kept by uninstall unless purged
+├── db/sure/                     # Sure database; kept by uninstall unless purged
+├── db/sure-storage/             # Sure's uploaded files; kept by uninstall unless purged
 ├── docker-compose.yml           # Services without optional GPU devices
 ├── docker-compose.gpu.yml       # Optional Intel graphics devices
 ├── mediactl                     # Service management helper
 └── config-templates/            # Starter Frigate and Homepage configurations
 ```
 
-Media is stored in `/srv/media` and Frigate recordings in `/srv/recordings` by default. The installer creates them; you can choose other directories during setup. See [STORAGE.md](STORAGE.md) to pool multiple media drives with SnapRAID and mergerfs. Optional photos, books, and audiobook services are enabled by the `photos,books` Compose profiles in `.env`.
+Media is stored in `/srv/media` and Frigate recordings in `/srv/recordings` by default. The installer creates them; you can choose other directories during setup. See [STORAGE.md](STORAGE.md) to pool multiple media drives with SnapRAID and mergerfs. Optional photos, books, audiobook and finance services are enabled by the `photos,books,finance` Compose profiles in `.env`.
 
 ## `mediactl` commands
 

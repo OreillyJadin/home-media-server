@@ -148,6 +148,8 @@ if [[ -f .env ]]; then
   COMPOSE_PROFILES="$(read_env_setting COMPOSE_PROFILES)"
   IMMICH_UPLOAD_DIR="$(read_env_setting IMMICH_UPLOAD_DIR)"
   IMMICH_DB_PASSWORD="$(read_env_setting IMMICH_DB_PASSWORD)"
+  SURE_SECRET_KEY_BASE="$(read_env_setting SURE_SECRET_KEY_BASE)"
+  SURE_DB_PASSWORD="$(read_env_setting SURE_DB_PASSWORD)"
 else
   if [[ "${NONINTERACTIVE:-0}" != 1 ]]; then
     if [[ -z "${TZ+x}" ]]; then
@@ -168,6 +170,8 @@ else
   PGID="${PGID:-${DEFAULT_PGID}}"
   FRIGATE_RTSP_PASSWORD="${FRIGATE_RTSP_PASSWORD:-changeme}"
   FRIGATE_SHM="${FRIGATE_SHM:-512mb}"
+  SURE_SECRET_KEY_BASE=""
+  SURE_DB_PASSWORD=""
 fi
 
 if [[ -e /dev/dri/renderD128 ]]; then
@@ -211,7 +215,7 @@ if [[ ! -f .env ]]; then
 fi
 
 if ! grep -q '^COMPOSE_PROFILES=' .env; then
-  COMPOSE_PROFILES=photos,books
+  COMPOSE_PROFILES=photos,books,finance
 fi
 if ! grep -q '^IMMICH_UPLOAD_DIR=' .env; then
   IMMICH_UPLOAD_DIR="${MEDIA_DIR}/immich"
@@ -219,10 +223,18 @@ fi
 if ! grep -q '^IMMICH_DB_PASSWORD=' .env; then
   IMMICH_DB_PASSWORD="$(openssl rand -hex 16)"
 fi
+if ! grep -q '^SURE_SECRET_KEY_BASE=' .env; then
+  SURE_SECRET_KEY_BASE="$(openssl rand -hex 64)"
+fi
+if ! grep -q '^SURE_DB_PASSWORD=' .env; then
+  SURE_DB_PASSWORD="$(openssl rand -hex 16)"
+fi
 append_env_setting HOMEPAGE_ALLOWED_HOSTS "${LAN_IP}:3000,localhost:3000"
 append_env_setting COMPOSE_PROFILES "${COMPOSE_PROFILES}"
 append_env_setting IMMICH_UPLOAD_DIR "${IMMICH_UPLOAD_DIR}"
 append_env_setting IMMICH_DB_PASSWORD "${IMMICH_DB_PASSWORD}"
+append_env_setting SURE_SECRET_KEY_BASE "${SURE_SECRET_KEY_BASE}"
+append_env_setting SURE_DB_PASSWORD "${SURE_DB_PASSWORD}"
 
 if [[ -z "${IMMICH_UPLOAD_DIR}" ]]; then
   printf 'IMMICH_UPLOAD_DIR in .env must not be empty.\n' >&2
@@ -230,6 +242,10 @@ if [[ -z "${IMMICH_UPLOAD_DIR}" ]]; then
 fi
 if [[ -z "${IMMICH_DB_PASSWORD}" ]]; then
   printf 'IMMICH_DB_PASSWORD in .env must not be empty.\n' >&2
+  exit 1
+fi
+if [[ -z "${SURE_SECRET_KEY_BASE}" || -z "${SURE_DB_PASSWORD}" ]]; then
+  printf 'SURE_SECRET_KEY_BASE and SURE_DB_PASSWORD in .env must not be empty.\n' >&2
   exit 1
 fi
 chown "${PUID}:${PGID}" .env
@@ -255,7 +271,9 @@ mkdir -p \
   config/calibre-web \
   cache/jellyfin \
   cache/immich-ml \
-  db/immich
+  db/immich \
+  db/sure \
+  db/sure-storage
 chown "${PUID}:${PGID}" \
   "${MEDIA_DIR}" \
   "${MEDIA_DIR}/movies" \
@@ -269,6 +287,8 @@ chown "${PUID}:${PGID}" \
   "${MEDIA_DIR}/immich" \
   "${IMMICH_UPLOAD_DIR}" \
   "${RECORDINGS_DIR}"
+# Sure runs as UID/GID 1000 in the pinned image.
+chown 1000:1000 db/sure-storage
 
 CALIBRE_LIBRARY_DB="${MEDIA_DIR}/books/metadata.db"
 CALIBRE_LIBRARY_DB_READY=1
@@ -305,7 +325,7 @@ done
 chown -R "${PUID}:${PGID}" config cache
 
 ACTIVE_PROFILES="$(read_env_setting COMPOSE_PROFILES)"
-unset COMPOSE_PROFILES IMMICH_UPLOAD_DIR IMMICH_DB_PASSWORD
+unset COMPOSE_PROFILES IMMICH_UPLOAD_DIR IMMICH_DB_PASSWORD SURE_SECRET_KEY_BASE SURE_DB_PASSWORD
 CALIBRE_DB_EXISTED=0
 if [[ -f config/calibre-web/app.db ]]; then
   CALIBRE_DB_EXISTED=1
@@ -373,6 +393,10 @@ if [[ ",${ACTIVE_PROFILES//[[:space:]]/}," == *",books,"* ]]; then
   else
     printf 'Calibre-Web: http://%s:8083 (change the default admin/admin123 password immediately)\n' "${LAN_IP}"
   fi
+fi
+if [[ ",${ACTIVE_PROFILES//[[:space:]]/}," == *",finance,"* ]]; then
+  printf 'Sure (finance): http://%s:3001 (first account you create becomes the admin)\n' "${LAN_IP}"
+  printf 'Back up .env: SURE_SECRET_KEY_BASE is required to read Sure encrypted data.\n'
 fi
 
 ln -sfn "${INSTALL_DIR}/mediactl" /usr/local/bin/mediactl

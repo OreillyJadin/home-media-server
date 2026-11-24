@@ -43,6 +43,9 @@ stop_disabled_profile_services() {
   if ! profile_enabled books; then
     docker compose --profile books stop audiobookshelf calibre-web
   fi
+  if ! profile_enabled finance; then
+    docker compose --profile finance stop sure-web sure-worker sure-db sure-redis
+  fi
 }
 
 warn_calibre_password_missing() {
@@ -102,7 +105,7 @@ case "${1:-}" in
     ;;
   uninstall)
     shift
-    docker compose --profile photos --profile books down
+    docker compose --profile photos --profile books --profile finance down
     if [[ "${1:-}" == --purge ]]; then
       media_dir="$(read_env_setting MEDIA_DIR)"
       recordings_dir="$(read_env_setting RECORDINGS_DIR)"
