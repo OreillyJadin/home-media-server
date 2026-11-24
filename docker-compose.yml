@@ -1,0 +1,206 @@
+x-sure-env: &sure_env
+  SECRET_KEY_BASE: "${SURE_SECRET_KEY_BASE}"
+  SELF_HOSTED: "true"
+  RAILS_FORCE_SSL: "false"
+  RAILS_ASSUME_SSL: "false"
+  DB_HOST: sure-db
+  DB_PORT: 5432
+  POSTGRES_USER: sure_user
+  POSTGRES_PASSWORD: "${SURE_DB_PASSWORD}"
+  POSTGRES_DB: sure_production
+  REDIS_URL: redis://sure-redis:6379/1
+  TZ: "${TZ}"
+
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:latest
+    container_name: jellyfin
+    restart: unless-stopped
+    user: "${PUID}:${PGID}"
+    ports:
+      - "8096:8096"
+      - "7359:7359/udp"
+    volumes:
+      - ./config/jellyfin:/config
+      - ./cache/jellyfin:/cache
+      - "${MEDIA_DIR}:/media"
+    environment:
+      TZ: "${TZ}"
+
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:0.18.3
+    container_name: frigate
+    restart: unless-stopped
+    privileged: false
+    shm_size: "${FRIGATE_SHM:-512mb}"
+    ports:
+      - "8971:8971"
+      - "8555:8555/tcp"
+      - "8555:8555/udp"
+    volumes:
+      - ./config/frigate:/config
+      - "${RECORDINGS_DIR}:/media/frigate"
+      - /etc/localtime:/etc/localtime:ro
+    tmpfs:
+      - /tmp/cache:size=1g
+    environment:
+      FRIGATE_RTSP_PASSWORD: "${FRIGATE_RTSP_PASSWORD}"
+      TZ: "${TZ}"
+
+  homepage:
+    image: ghcr.io/gethomepage/homepage:v2.8.0
+    container_name: homepage
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./config/homepage:/app/config
+    environment:
+      HOMEPAGE_ALLOWED_HOSTS: "${HOMEPAGE_ALLOWED_HOSTS:-localhost:3000}"
+      PUID: "${PUID}"
+      PGID: "${PGID}"
+
+  immich-server:
+    profiles: ["photos"]
+    image: ghcr.io/immich-app/immich-server:v3.4.2
+    container_name: immich_server
+    restart: unless-stopped
+    ports:
+      - "2283:2283"
+    volumes:
+      - "${IMMICH_UPLOAD_DIR}:/data"
+      - "${MEDIA_DIR}/photos:/mnt/photos:ro"
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      TZ: "${TZ}"
+      DB_HOSTNAME: immich-database
+      REDIS_HOSTNAME: immich-redis
+      DB_PASSWORD: "${IMMICH_DB_PASSWORD}"
+      DB_USERNAME: postgres
+      DB_DATABASE_NAME: immich
+    depends_on:
+      - immich-redis
+      - immich-database
+
+  immich-machine-learning:
+    profiles: ["photos"]
+    image: ghcr.io/immich-app/immich-machine-learning:v3.4.2
+    container_name: immich_machine_learning
+    restart: unless-stopped
+    volumes:
+      - ./cache/immich-ml:/cache
+    environment:
+      MACHINE_LEARNING_MODEL_REVISION: v2
+      TZ: "${TZ}"
+
+  immich-redis:
+    profiles: ["photos"]
+    image: docker.io/valkey/valkey:9@sha256:418652cfb58ef879d4978c33553735d7147016032d5aefaa14c828e611eb9dfd
+    container_name: immich_redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG || exit 1"]
+
+  immich-database:
+    profiles: ["photos"]
+    image: ghcr.io/immich-app/postgres:14-vectorchord0.4.3-pgvectors0.2.0@sha256:bcf63357191b76a916ae5eb93464d65c07511da41e3bf7a8416db519b40b1c23
+    container_name: immich_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: "${IMMICH_DB_PASSWORD}"
+      POSTGRES_USER: postgres
+      POSTGRES_DB: immich
+      POSTGRES_INITDB_ARGS: --data-checksums
+    shm_size: 128mb
+    volumes:
+      - ./db/immich:/var/lib/postgresql/data
+
+  audiobookshelf:
+    profiles: ["books"]
+    image: ghcr.io/advplyr/audiobookshelf:2.38.0
+    container_name: audiobookshelf
+    restart: unless-stopped
+    user: "${PUID}:${PGID}"
+    ports:
+      - "13378:80"
+    environment:
+      TZ: "${TZ}"
+    volumes:
+      - "${MEDIA_DIR}/audiobooks:/audiobooks"
+      - "${MEDIA_DIR}/podcasts:/podcasts"
+      - ./config/audiobookshelf/config:/config
+      - ./config/audiobookshelf/metadata:/metadata
+
+  calibre-web:
+    profiles: ["books"]
+    image: lscr.io/linuxserver/calibre-web:0.6.27-ls411
+    container_name: calibre-web
+    restart: unless-stopped
+    ports:
+      - "8083:8083"
+    environment:
+      PUID: "${PUID}"
+      PGID: "${PGID}"
+      TZ: "${TZ}"
+    volumes:
+      - ./config/calibre-web:/config
+      - "${MEDIA_DIR}/books:/books"
+
+  sure-web:
+    profiles: ["finance"]
+    image: ghcr.io/we-promise/sure:0.7.6-hotfix.2
+    container_name: sure-web
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./db/sure-storage:/rails/storage
+    environment: *sure_env
+    depends_on:
+      sure-db:
+        condition: service_healthy
+      sure-redis:
+        condition: service_healthy
+
+  sure-worker:
+    profiles: ["finance"]
+    image: ghcr.io/we-promise/sure:0.7.6-hotfix.2
+    container_name: sure-worker
+    restart: unless-stopped
+    command: bundle exec sidekiq
+    volumes:
+      - ./db/sure-storage:/rails/storage
+    environment: *sure_env
+    depends_on:
+      sure-db:
+        condition: service_healthy
+      sure-redis:
+        condition: service_healthy
+
+  sure-db:
+    profiles: ["finance"]
+    image: postgres:16.10
+    container_name: sure-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sure_user
+      POSTGRES_PASSWORD: "${SURE_DB_PASSWORD}"
+      POSTGRES_DB: sure_production
+    volumes:
+      - ./db/sure:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sure_user -d sure_production"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  sure-redis:
+    profiles: ["finance"]
+    image: redis:7.4-alpine
+    container_name: sure-redis
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

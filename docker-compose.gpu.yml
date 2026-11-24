@@ -1,0 +1,10 @@
+services:
+  jellyfin:
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - "${RENDER_GID}"
+
+  frigate:
+    devices:
+      - /dev/dri:/dev/dri

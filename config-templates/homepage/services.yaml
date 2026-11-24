@@ -1,0 +1,52 @@
+- Media:
+    - Jellyfin:
+        icon: jellyfin.png
+        href: http://__LAN_IP__:8096
+        description: Movies & TV
+        siteMonitor: http://jellyfin:8096/health
+        # To enable this widget, create an API key in Jellyfin under Dashboard → API Keys,
+        # then uncomment the block and paste the key below.
+        # widget:
+        #   type: jellyfin
+        #   url: http://jellyfin:8096
+        #   key: <API key from Jellyfin Dashboard → API Keys>
+        #   version: 2
+        #   enableBlocks: true
+- Library:
+    - Immich:
+        icon: immich.png
+        href: http://__LAN_IP__:2283
+        description: Photos
+        siteMonitor: http://immich-server:2283/api/server/ping
+    - Audiobookshelf:
+        icon: audiobookshelf.png
+        href: http://__LAN_IP__:13378
+        description: Audiobooks & podcasts
+        siteMonitor: http://audiobookshelf:80/healthcheck
+    - Calibre-Web:
+        icon: calibre-web.png
+        href: http://__LAN_IP__:8083
+        description: E-books → Kindle
+        siteMonitor: http://calibre-web:8083
+- Money:
+    - Sure:
+        icon: sure.png
+        href: http://__LAN_IP__:3001
+        description: Personal finance
+        siteMonitor: http://sure-web:3000/up
+- Cameras:
+    - Frigate:
+        icon: frigate.png
+        href: https://__LAN_IP__:8971
+        description: Security camera
+        siteMonitor: http://frigate:5000/api/version
+        # No Frigate widget: it would read Frigate's internal API without a login
+        # and could show camera snapshots to anyone who opens the dashboard.
+- Network:
+    - Router:
+        icon: unifi.png
+        href: https://__GATEWAY_IP__
+        description: UniFi / router admin
+    # - UniFi Protect:
+    #     icon: unifi.png
+    #     href: https://__GATEWAY_IP__/protect/
